@@ -139,7 +139,7 @@ public class PacketKeeper {
             InputStream is = getAdapter().getObject(PACKET_MANAGER_ACCOUNT, packetInfo.getId(), packetInfo.getSource(),
                     packetInfo.getProcess(), getName(packetInfo.getId(), packetInfo.getPacketName()));
             LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, packetInfo.getId(),
-                    "getPacket - Object Reading "  + " source : " + packetInfo.getSource() + " process : " + packetInfo.getProcess() + " From Object Store. Response Time in Seconds : " + TimeUnit.SECONDS.convert(System.nanoTime()-startTime, TimeUnit.MILLISECONDS));
+                    "getPacket - Object Reading "  + " source : " + packetInfo.getSource() + " process : " + packetInfo.getProcess() + " From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.nanoTime()-startTime, TimeUnit.NANOSECONDS));
             if (is == null) {
                 LOGGER.error(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID,
                         getName(packetInfo.getId(), packetInfo.getPacketName()), packetInfo.getProcess() + " Packet is not present in packet store.");
@@ -151,7 +151,7 @@ public class PacketKeeper {
             Map<String, Object> metaInfo = getAdapter().getMetaData(PACKET_MANAGER_ACCOUNT, packetInfo.getId(),
                     packetInfo.getSource(), packetInfo.getProcess(), getName(packetInfo.getId(), packetInfo.getPacketName()));
             LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, packetInfo.getId(),
-                    "getPacket - Reading MetaInfo "  + " source : " + packetInfo.getSource() + " process : " + packetInfo.getProcess() + " From Object Store. Response Time in Seconds : " + TimeUnit.SECONDS.convert(System.nanoTime()-startTime, TimeUnit.MILLISECONDS));
+                    "getPacket - Reading MetaInfo "  + " source : " + packetInfo.getSource() + " process : " + packetInfo.getProcess() + " From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.nanoTime()-startTime, TimeUnit.NANOSECONDS));
             if (metaInfo != null && !metaInfo.isEmpty())
                 packet.setPacketInfo(PacketManagerHelper.getPacketInfo(metaInfo));
             else {
@@ -162,7 +162,7 @@ public class PacketKeeper {
             byte[] subPacket = getCryptoService().decrypt(helper.getRefId(
                     packet.getPacketInfo().getId(), packet.getPacketInfo().getRefId()), encryptedSubPacket);
             LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, packetInfo.getId(),
-                    "getPacket - Decrypt Packet "  + " source : " + packetInfo.getSource() + " process : " + packetInfo.getProcess() + " From Object Store. Response Time in Seconds : " + TimeUnit.SECONDS.convert(System.nanoTime()-startTime, TimeUnit.MILLISECONDS));
+                    "getPacket - Decrypt Packet "  + " source : " + packetInfo.getSource() + " process : " + packetInfo.getProcess() + " From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.nanoTime()-startTime, TimeUnit.NANOSECONDS));
             packet.setPacket(subPacket);
 
 
@@ -172,7 +172,7 @@ public class PacketKeeper {
                 throw new PacketIntegrityFailureException();
             }
             LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, packetInfo.getId(),
-                    "getPacket - Checking Signature "  + " source : " + packetInfo.getSource() + " process : " + packetInfo.getProcess() + " From Object Store. Response Time in Seconds : " + TimeUnit.SECONDS.convert(System.nanoTime()-startTime, TimeUnit.MILLISECONDS));
+                    "getPacket - Checking Signature "  + " source : " + packetInfo.getSource() + " process : " + packetInfo.getProcess() + " From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.nanoTime()-startTime, TimeUnit.NANOSECONDS));
             return packet;
         } catch (Exception e) {
             LOGGER.error(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, packetInfo.getId(), ExceptionUtils.getStackTrace(e));

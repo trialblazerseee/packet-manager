@@ -137,7 +137,7 @@ public class PacketReaderImpl implements IPacketReader {
 				Packet packet = packetKeeper.getPacket(getPacketInfo(id, srcPacket, source, process));
 				InputStream idJsonStream = ZipUtils.unzipAndGetFile(packet.getPacket(), "ID");
 				LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-						"getPacket - Unzip Packet "  + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.SECONDS.convert(System.nanoTime()-startTime, TimeUnit.MILLISECONDS));
+						"getPacket - Unzip Packet "  + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.nanoTime()-startTime, TimeUnit.NANOSECONDS));
 				if (idJsonStream != null) {
 					byte[] bytearray = IOUtils.toByteArray(idJsonStream);
 					String jsonString = new String(bytearray);
@@ -161,7 +161,7 @@ public class PacketReaderImpl implements IPacketReader {
 						}
 					});
 					LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-							"getPacket - Mapping Fields"  + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.SECONDS.convert(System.nanoTime()-startTime, TimeUnit.MILLISECONDS));
+							"getPacket - Mapping Fields"  + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.nanoTime()-startTime, TimeUnit.NANOSECONDS));
 				}
 			}
 		} catch (Exception e) {

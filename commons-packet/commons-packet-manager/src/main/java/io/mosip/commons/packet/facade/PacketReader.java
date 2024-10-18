@@ -109,7 +109,7 @@ public class PacketReader {
         Long startTime = System.nanoTime();
         Document document=  getProvider(source, process).getDocument(id, documentName, source, process);
         LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-                "getDocument - Object Reading for field : " + documentName + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.SECONDS.convert(System.nanoTime()-startTime, TimeUnit.MILLISECONDS));
+                "getDocument - Object Reading for field : " + documentName + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.nanoTime()-startTime, TimeUnit.NANOSECONDS));
         return document;
     }
 
@@ -132,7 +132,7 @@ public class PacketReader {
         BiometricRecord biometricRecord =  getProvider(source, process).getBiometric(id, person, modalities, source, process);
         try {
             LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-                    "getBiometric - Object Reading for field : " + person + "[" + objectMapper.writeValueAsString(modalities) + "]"  + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.SECONDS.convert(System.nanoTime()-startTime, TimeUnit.MILLISECONDS));
+                    "getBiometric - Object Reading for field : " + person + "[" + objectMapper.writeValueAsString(modalities) + "]"  + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.nanoTime()-startTime, TimeUnit.NANOSECONDS));
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
@@ -156,7 +156,7 @@ public class PacketReader {
         Long startTime = System.nanoTime();
         Map<String, String> metaMap=  getProvider(source, process).getMetaInfo(id, source, process);
         LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-                "getMetaInfo - Object Reading"  + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.SECONDS.convert(System.nanoTime()-startTime, TimeUnit.MILLISECONDS));
+                "getMetaInfo - Object Reading"  + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.nanoTime()-startTime, TimeUnit.NANOSECONDS));
         return metaMap;
 
     }
@@ -171,12 +171,12 @@ public class PacketReader {
      */
     @PreAuthorize("hasRole('DATA_READ')")
     public List<ObjectDto> info(String id) {
-        LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-                "info called");
+//        LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
+//                "info called");
         Long startTime = System.nanoTime();
         List<ObjectDto> objectList =  packetKeeper.getAll(id);
         LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-                "info - Object Reading From Object Store. Response Time in Seconds : " + TimeUnit.SECONDS.convert(System.nanoTime()-startTime, TimeUnit.MILLISECONDS));
+                "info - Object Reading From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.nanoTime()-startTime, TimeUnit.NANOSECONDS));
         return objectList;
     }
 
@@ -190,8 +190,8 @@ public class PacketReader {
      */
     @PreAuthorize("hasRole('DATA_READ')")
     public Set<String> getAllKeys(String id, String source, String process) {
-        LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-                "getAllKeys for source : " + source + " process : " + process);
+//        LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
+//                "getAllKeys for source : " + source + " process : " + process);
         return getProvider(source, process).getAll(id, source, process).keySet();
     }
 
@@ -224,7 +224,7 @@ public class PacketReader {
         Long startTime = System.nanoTime();
         List<Map<String, String>> map =  getProvider(source, process).getAuditInfo(id, source, process);
         LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-                "getAudits - Object Reading"  + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.SECONDS.convert(System.nanoTime()-startTime, TimeUnit.MILLISECONDS));
+                "getAudits - Object Reading"  + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.nanoTime()-startTime, TimeUnit.NANOSECONDS));
         return map;
     }
 
@@ -233,7 +233,7 @@ public class PacketReader {
         Long startTime = System.nanoTime();
         Map<String, String> tags = packetKeeper.getTags(id);
         LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-                "getTags - Object Reading  From Object Store. Response Time in Seconds : " + TimeUnit.SECONDS.convert(System.nanoTime()-startTime, TimeUnit.MILLISECONDS));
+                "getTags - Object Reading  From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.nanoTime()-startTime, TimeUnit.NANOSECONDS));
         return tags;
     }
 
@@ -241,7 +241,7 @@ public class PacketReader {
         Long startTime = System.nanoTime();
         boolean valid =  getProvider(source, process).validatePacket(id, source, process);
         LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-                "validatePacket - Object Reading"  + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.SECONDS.convert(System.nanoTime()-startTime, TimeUnit.MILLISECONDS));
+                "validatePacket - Object Reading"  + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.nanoTime()-startTime, TimeUnit.NANOSECONDS));
         return valid;
     }
 
