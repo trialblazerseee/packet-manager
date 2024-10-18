@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import io.mosip.commons.packet.facade.PacketReader;
 import io.mosip.kernel.biometrics.constant.BiometricType;
@@ -126,7 +127,8 @@ public class PacketReaderImpl implements IPacketReader {
 	@Cacheable(value = "packets", key = "{'allFields'.concat('-').concat(#id).concat('-').concat(#process)}")
 	public Map<String, Object> getAll(String id, String source, String process) {
 		LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-				"Getting all fields :: enrtry");
+				"Getting all fields :: entry");
+		Long startTime = System.nanoTime();
 		Map<String, Object> finalMap = new LinkedHashMap<>();
 		String[] sourcePacketNames = packetNames.split(",");
 
@@ -134,6 +136,8 @@ public class PacketReaderImpl implements IPacketReader {
 			for (String srcPacket : sourcePacketNames) {
 				Packet packet = packetKeeper.getPacket(getPacketInfo(id, srcPacket, source, process));
 				InputStream idJsonStream = ZipUtils.unzipAndGetFile(packet.getPacket(), "ID");
+				LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
+						"getPacket - Unzip Packet "  + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.SECONDS.convert(System.nanoTime()-startTime, TimeUnit.MILLISECONDS));
 				if (idJsonStream != null) {
 					byte[] bytearray = IOUtils.toByteArray(idJsonStream);
 					String jsonString = new String(bytearray);
@@ -156,6 +160,8 @@ public class PacketReaderImpl implements IPacketReader {
 							}
 						}
 					});
+					LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
+							"getPacket - Mapping Fields"  + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.SECONDS.convert(System.nanoTime()-startTime, TimeUnit.MILLISECONDS));
 				}
 			}
 		} catch (Exception e) {

@@ -4,8 +4,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.Cacheable;
@@ -41,6 +44,8 @@ public class PacketReader {
 	@Autowired
 	private PacketKeeper packetKeeper;
 
+    private ObjectMapper objectMapper = new ObjectMapper();
+
     /**
      * Get a field from identity file
      *
@@ -53,7 +58,7 @@ public class PacketReader {
     @PreAuthorize("hasRole('DATA_READ')")
     public String getField(String id, String field, String source, String process, boolean bypassCache) {
         LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-                "getFields for fields : " + field + " source : " + source + " process : " + process);
+                "getField for fields : " + field + " source : " + source + " process : " + process + " Cache : " + bypassCache);
         String value;
         if (bypassCache)
             value = getProvider(source, process).getField(id, field, source, process);
@@ -76,7 +81,7 @@ public class PacketReader {
     @PreAuthorize("hasRole('DATA_READ')")
     public Map<String, String> getFields(String id, List<String> fields, String source, String process, boolean bypassCache) {
         LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-                "getFields for fields : " + fields.toString() + " source : " + source + " process : " + process);
+                "getFields for fields : " + fields.toString() + " source : " + source + " process : " + process+ " Cache : " + bypassCache);
         Map<String, String> values;
         if (bypassCache)
             values = getProvider(source, process).getFields(id, fields, source, process);
@@ -101,7 +106,11 @@ public class PacketReader {
     public Document getDocument(String id, String documentName, String source, String process) {
         LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
                 "getDocument for documentName : " + documentName + " source : " + source + " process : " + process);
-        return getProvider(source, process).getDocument(id, documentName, source, process);
+        Long startTime = System.nanoTime();
+        Document document=  getProvider(source, process).getDocument(id, documentName, source, process);
+        LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
+                "getDocument - Object Reading for field : " + documentName + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.SECONDS.convert(System.nanoTime()-startTime, TimeUnit.MILLISECONDS));
+        return document;
     }
 
     /**
@@ -119,7 +128,16 @@ public class PacketReader {
     public BiometricRecord getBiometric(String id, String person, List<String> modalities, String source, String process, boolean bypassCache) {
         LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
                 "getBiometric for source : " + source + " process : " + process);
-        return getProvider(source, process).getBiometric(id, person, modalities, source, process);
+        Long startTime = System.nanoTime();
+        BiometricRecord biometricRecord =  getProvider(source, process).getBiometric(id, person, modalities, source, process);
+        try {
+            LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
+                    "getBiometric - Object Reading for field : " + person + "[" + objectMapper.writeValueAsString(modalities) + "]"  + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.SECONDS.convert(System.nanoTime()-startTime, TimeUnit.MILLISECONDS));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        return biometricRecord;
+
     }
 
     /**
@@ -135,7 +153,12 @@ public class PacketReader {
     public Map<String, String> getMetaInfo(String id, String source, String process, boolean bypassCache) {
         LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
                 "getMetaInfo for source : " + source + " process : " + process);
-        return getProvider(source, process).getMetaInfo(id, source, process);
+        Long startTime = System.nanoTime();
+        Map<String, String> metaMap=  getProvider(source, process).getMetaInfo(id, source, process);
+        LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
+                "getMetaInfo - Object Reading"  + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.SECONDS.convert(System.nanoTime()-startTime, TimeUnit.MILLISECONDS));
+        return metaMap;
+
     }
 
     /**
@@ -150,7 +173,11 @@ public class PacketReader {
     public List<ObjectDto> info(String id) {
         LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
                 "info called");
-        return packetKeeper.getAll(id);
+        Long startTime = System.nanoTime();
+        List<ObjectDto> objectList =  packetKeeper.getAll(id);
+        LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
+                "info - Object Reading From Object Store. Response Time in Seconds : " + TimeUnit.SECONDS.convert(System.nanoTime()-startTime, TimeUnit.MILLISECONDS));
+        return objectList;
     }
 
     /**
@@ -193,18 +220,29 @@ public class PacketReader {
     @Cacheable(value = "packets", key = "{#id.concat('-').concat(#source).concat('-').concat(#process)}", condition = "#bypassCache == false")
     public List<Map<String, String>> getAudits(String id, String source, String process, boolean bypassCache) {
         LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-                "getAllFields for source : " + source + " process : " + process);
-        return getProvider(source, process).getAuditInfo(id, source, process);
+                "getAudits for source : " + source + " process : " + process);
+        Long startTime = System.nanoTime();
+        List<Map<String, String>> map =  getProvider(source, process).getAuditInfo(id, source, process);
+        LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
+                "getAudits - Object Reading"  + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.SECONDS.convert(System.nanoTime()-startTime, TimeUnit.MILLISECONDS));
+        return map;
     }
 
     @Cacheable(value = "tags", key = "{#id}")
     public  Map<String, String>  getTags(String id) {
+        Long startTime = System.nanoTime();
         Map<String, String> tags = packetKeeper.getTags(id);
+        LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
+                "getTags - Object Reading  From Object Store. Response Time in Seconds : " + TimeUnit.SECONDS.convert(System.nanoTime()-startTime, TimeUnit.MILLISECONDS));
         return tags;
     }
 
     public boolean validatePacket(String id, String source, String process) {
-        return getProvider(source, process).validatePacket(id, source, process);
+        Long startTime = System.nanoTime();
+        boolean valid =  getProvider(source, process).validatePacket(id, source, process);
+        LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
+                "validatePacket - Object Reading"  + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.SECONDS.convert(System.nanoTime()-startTime, TimeUnit.MILLISECONDS));
+        return valid;
     }
 
     private IPacketReader getProvider(String source, String process) {

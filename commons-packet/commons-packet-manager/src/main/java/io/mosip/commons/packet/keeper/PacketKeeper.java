@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import io.mosip.commons.packet.exception.ObjectDoesnotExistsException;
 import org.apache.commons.io.IOUtils;
@@ -134,8 +135,11 @@ public class PacketKeeper {
      */
     public Packet getPacket(PacketInfo packetInfo) throws PacketKeeperException {
         try {
+            Long startTime = System.nanoTime();
             InputStream is = getAdapter().getObject(PACKET_MANAGER_ACCOUNT, packetInfo.getId(), packetInfo.getSource(),
                     packetInfo.getProcess(), getName(packetInfo.getId(), packetInfo.getPacketName()));
+            LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, packetInfo.getId(),
+                    "getPacket - Object Reading "  + " source : " + packetInfo.getSource() + " process : " + packetInfo.getProcess() + " From Object Store. Response Time in Seconds : " + TimeUnit.SECONDS.convert(System.nanoTime()-startTime, TimeUnit.MILLISECONDS));
             if (is == null) {
                 LOGGER.error(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID,
                         getName(packetInfo.getId(), packetInfo.getPacketName()), packetInfo.getProcess() + " Packet is not present in packet store.");
@@ -146,6 +150,8 @@ public class PacketKeeper {
             Packet packet = new Packet();
             Map<String, Object> metaInfo = getAdapter().getMetaData(PACKET_MANAGER_ACCOUNT, packetInfo.getId(),
                     packetInfo.getSource(), packetInfo.getProcess(), getName(packetInfo.getId(), packetInfo.getPacketName()));
+            LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, packetInfo.getId(),
+                    "getPacket - Reading MetaInfo "  + " source : " + packetInfo.getSource() + " process : " + packetInfo.getProcess() + " From Object Store. Response Time in Seconds : " + TimeUnit.SECONDS.convert(System.nanoTime()-startTime, TimeUnit.MILLISECONDS));
             if (metaInfo != null && !metaInfo.isEmpty())
                 packet.setPacketInfo(PacketManagerHelper.getPacketInfo(metaInfo));
             else {
@@ -155,6 +161,8 @@ public class PacketKeeper {
             }
             byte[] subPacket = getCryptoService().decrypt(helper.getRefId(
                     packet.getPacketInfo().getId(), packet.getPacketInfo().getRefId()), encryptedSubPacket);
+            LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, packetInfo.getId(),
+                    "getPacket - Decrypt Packet "  + " source : " + packetInfo.getSource() + " process : " + packetInfo.getProcess() + " From Object Store. Response Time in Seconds : " + TimeUnit.SECONDS.convert(System.nanoTime()-startTime, TimeUnit.MILLISECONDS));
             packet.setPacket(subPacket);
 
 
@@ -163,7 +171,8 @@ public class PacketKeeper {
                         getName(packet.getPacketInfo().getId(), packetInfo.getPacketName()), "Packet Integrity and Signature check failed");
                 throw new PacketIntegrityFailureException();
             }
-
+            LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, packetInfo.getId(),
+                    "getPacket - Checking Signature "  + " source : " + packetInfo.getSource() + " process : " + packetInfo.getProcess() + " From Object Store. Response Time in Seconds : " + TimeUnit.SECONDS.convert(System.nanoTime()-startTime, TimeUnit.MILLISECONDS));
             return packet;
         } catch (Exception e) {
             LOGGER.error(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, packetInfo.getId(), ExceptionUtils.getStackTrace(e));
