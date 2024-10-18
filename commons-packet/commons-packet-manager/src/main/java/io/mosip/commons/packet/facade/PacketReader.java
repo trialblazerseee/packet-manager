@@ -171,8 +171,8 @@ public class PacketReader {
      */
     @PreAuthorize("hasRole('DATA_READ')")
     public List<ObjectDto> info(String id) {
-//        LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-//                "info called");
+        LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
+                "info called");
         Long startTime = System.nanoTime();
         List<ObjectDto> objectList =  packetKeeper.getAll(id);
         LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
@@ -190,8 +190,8 @@ public class PacketReader {
      */
     @PreAuthorize("hasRole('DATA_READ')")
     public Set<String> getAllKeys(String id, String source, String process) {
-//        LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-//                "getAllKeys for source : " + source + " process : " + process);
+        LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
+                "getAllKeys for source : " + source + " process : " + process);
         return getProvider(source, process).getAll(id, source, process).keySet();
     }
 
