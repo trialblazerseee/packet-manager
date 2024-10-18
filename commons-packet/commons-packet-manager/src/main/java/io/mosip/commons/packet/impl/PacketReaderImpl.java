@@ -126,8 +126,8 @@ public class PacketReaderImpl implements IPacketReader {
 	@Override
 	@Cacheable(value = "packets", key = "{'allFields'.concat('-').concat(#id).concat('-').concat(#process)}")
 	public Map<String, Object> getAll(String id, String source, String process) {
-		LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-				"Getting all fields :: entry");
+//		LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
+//				"Getting all fields :: entry");
 		Long startTime = System.nanoTime();
 		Map<String, Object> finalMap = new LinkedHashMap<>();
 		String[] sourcePacketNames = packetNames.split(",");
@@ -182,8 +182,8 @@ public class PacketReaderImpl implements IPacketReader {
 
 	@Override
 	public String getField(String id, String field, String source, String process) {
-		LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-				"getField :: for - " + field);
+//		LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
+//				"getField :: for - " + field);
 		Map<String, Object> allFields = getAll(id, source, process);
 		if (allFields != null) {
 			Object fieldObj = allFields.get(field);
@@ -194,8 +194,8 @@ public class PacketReaderImpl implements IPacketReader {
 
 	@Override
 	public Map<String, String> getFields(String id, List<String> fields, String source, String process) {
-		LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-				"getFields :: for - " + fields.toString());
+//		LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
+//				"getFields :: for - " + fields.toString());
 		Map<String, String> result = new HashMap<>();
 		Map<String, Object> allFields = getAll(id, source, process);
 		fields.stream().forEach(
@@ -206,8 +206,8 @@ public class PacketReaderImpl implements IPacketReader {
 
 	@Override
 	public Document getDocument(String id, String documentName, String source, String process) {
-		LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-				"getDocument :: for - " + documentName);
+//		LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
+//				"getDocument :: for - " + documentName);
 		try {
 			String schemaVersionString = packetReader.getField(id, idSchemaUtils.getIdschemaVersionFromMappingJson(), source, process, false);
 			Double schemaVersion = schemaVersionString != null ? Double.valueOf(schemaVersionString) : null;
@@ -239,8 +239,8 @@ public class PacketReaderImpl implements IPacketReader {
 	@Override
 	public BiometricRecord getBiometric(String id, String biometricFieldName, List<String> modalities, String source,
 			String process) {
-		LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-				"getBiometric :: for - " + biometricFieldName);
+//		LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
+//				"getBiometric :: for - " + biometricFieldName);
 		BiometricRecord biometricRecord = null;
 		String packetName = null;
 		String fileName = null;
@@ -348,7 +348,7 @@ public class PacketReaderImpl implements IPacketReader {
 
 	@Override
 	public List<Map<String, String>> getAuditInfo(String id, String source, String process) {
-		LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id, "getAuditInfo :: enrtry");
+//		LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id, "getAuditInfo :: enrtry");
 		List<Map<String, String>> finalMap = new ArrayList<>();
 		String[] sourcePacketNames = packetNames.split(",");
 		try {

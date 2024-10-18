@@ -246,8 +246,8 @@ public class PacketReader {
     }
 
     private IPacketReader getProvider(String source, String process) {
-        LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, null,
-                "getProvider for source : " + source + " process : " + process);
+//        LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, null,
+//                "getProvider for source : " + source + " process : " + process);
         IPacketReader provider = null;
         if (referenceReaderProviders != null && !referenceReaderProviders.isEmpty()) {
             Optional<IPacketReader> refProvider = referenceReaderProviders.stream().filter(refPr ->
