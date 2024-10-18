@@ -50,7 +50,7 @@ jobs:
 
 
       - name: Upload the springboot jars
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v4
         with:
           name: release
           path: ./release.zip
