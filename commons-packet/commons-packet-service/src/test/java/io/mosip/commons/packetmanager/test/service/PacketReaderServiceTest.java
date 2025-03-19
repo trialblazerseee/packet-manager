@@ -91,7 +91,7 @@ public class PacketReaderServiceTest {
 
         BiometricRecord biometricRecord = new BiometricRecord();
         biometricRecord.setSegments(birTypeList);
-        Mockito.when(packetReader.getBiometric(any(),any(),any(),any(),any(), anyBoolean())).thenReturn(biometricRecord);
+        Mockito.when(packetReader.getBiometric(any(),any(),any(),any(),any(), anyBoolean(), System.currentTimeMillis())).thenReturn(biometricRecord);
 
         Mockito.when(restTemplate.getForObject(anyString(), any(Class.class))).thenReturn("jsonobject");
         LinkedHashMap tempMap = new LinkedHashMap();
@@ -107,16 +107,16 @@ public class PacketReaderServiceTest {
 
         ObjectDto objectDto = new ObjectDto("REGISTRATION_CLIENT", "NEW", id + "_id", new Date());
         List<ObjectDto> allObjects = Lists.newArrayList(objectDto);
-        Mockito.when(packetReader.info(id)).thenReturn(allObjects);
+        Mockito.when(packetReader.info(id, System.currentTimeMillis())).thenReturn(allObjects);
 
         Set<String> demographics = Sets.newHashSet("name", "email", "phone", "individualBiometrics");
-        Mockito.when(packetReader.getAllKeys(id, objectDto.getSource(), objectDto.getProcess())).thenReturn(demographics);
+        Mockito.when(packetReader.getAllKeys(id, objectDto.getSource(), objectDto.getProcess(), System.currentTimeMillis())).thenReturn(demographics);
 
     }
 
     @Test
     public void testInfoSuccess() {
-        InfoResponseDto infoResponseDto = packetReaderService.info(id);
+        InfoResponseDto infoResponseDto = packetReaderService.info(id, System.currentTimeMillis());
 
         assertTrue("Id should be equal.", infoResponseDto.getApplicationId().equals(id));
         assertTrue("Id should be equal.", infoResponseDto.getPacketId().equals(id));
@@ -127,42 +127,42 @@ public class PacketReaderServiceTest {
     public void testException() throws IOException {
         Mockito.when(objectMapper.readValue(anyString(), any(Class.class))).thenThrow(new JsonMappingException("Mapping Exception"));
 
-        packetReaderService.info(id);
+        packetReaderService.info(id, System.currentTimeMillis());
     }
     @Test
     public void testGetTagsSuccess() {
         Map<String, String> tags = new HashMap<>();
         tags.put("test", "testValue");
-    	 Mockito.when(packetReader.getTags(anyString())).thenReturn(tags);
+    	 Mockito.when(packetReader.getTags(anyString(), System.currentTimeMillis())).thenReturn(tags);
     	 TagRequestDto tagRequestDto=new TagRequestDto();
     	 tagRequestDto.setId("id");
     	 List<String> tagNames=new ArrayList<String>();
     	 tagNames.add("test");
     	 tagRequestDto.setTagNames(tagNames);
-    	 TagResponseDto tagResponseDto=packetReaderService.getTags(tagRequestDto);
+    	 TagResponseDto tagResponseDto=packetReaderService.getTags(tagRequestDto, System.currentTimeMillis());
     	 assertEquals(tagResponseDto.getTags(), tags);
     }
 	@Test(expected = GetTagException.class)
     public void testGetTagNotFound() {
 		 Map<String, String> tags = new HashMap<>();
 	        tags.put("test", "testValue");
-	    	 Mockito.when(packetReader.getTags(anyString())).thenReturn(tags);
+	    	 Mockito.when(packetReader.getTags(anyString(), System.currentTimeMillis())).thenReturn(tags);
 	    	 TagRequestDto tagRequestDto=new TagRequestDto();
 	    	 tagRequestDto.setId("id");
 	    	 List<String> tagNames=new ArrayList<String>();
 	    	 tagNames.add("testtag");
 	    	 tagRequestDto.setTagNames(tagNames);
-	    	 packetReaderService.getTags(tagRequestDto);
+	    	 packetReaderService.getTags(tagRequestDto, System.currentTimeMillis());
 
     }
 	 @Test(expected = GetTagException.class)
 	    public void testGetTagsException() {
-		 Mockito.when(packetReader.getTags(anyString())).thenThrow(new BaseUncheckedException("code","message"));
+		 Mockito.when(packetReader.getTags(anyString(), System.currentTimeMillis())).thenThrow(new BaseUncheckedException("code","message"));
 		 TagRequestDto tagRequestDto=new TagRequestDto();
     	 tagRequestDto.setId("id");
     	 List<String> tagNames=new ArrayList<String>();
     	 tagNames.add("testtag");
     	 tagRequestDto.setTagNames(tagNames);
-    	 packetReaderService.getTags(tagRequestDto);  
+    	 packetReaderService.getTags(tagRequestDto, System.currentTimeMillis());
 	    }
 }

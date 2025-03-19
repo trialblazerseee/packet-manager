@@ -73,16 +73,16 @@ public class PacketReaderTest {
         allFields.put("email", "mono@mono.com");
         allFields.put("phone", "1234567");
 
-        Mockito.when(packetReaderProvider.getAll(anyString(), anyString(), anyString())).thenReturn(allFields);
+        Mockito.when(packetReaderProvider.getAll(anyString(), anyString(), anyString(), System.currentTimeMillis())).thenReturn(allFields);
 
     }
 
     @Test
     public void testGetFieldWithBypassCache() {
         String field = "name";
-        Mockito.when(packetReaderProvider.getField(anyString(), anyString(), anyString(), anyString())).thenReturn(field);
+        Mockito.when(packetReaderProvider.getField(anyString(), anyString(), anyString(), anyString(), System.currentTimeMillis())).thenReturn(field);
 
-        String result = packetReader.getField(id, field, source, process, true);
+        String result = packetReader.getField(id, field, source, process, true, System.currentTimeMillis());
 
         assertTrue(result == field);
     }
@@ -91,7 +91,7 @@ public class PacketReaderTest {
     public void testGetField() {
         String field = "name";
 
-        String result = packetReader.getField(id, field, source, process, false);
+        String result = packetReader.getField(id, field, source, process, false, System.currentTimeMillis());
 
         assertTrue(result.equals(allFields.get("name")));
     }
@@ -102,9 +102,9 @@ public class PacketReaderTest {
         List<String> fieldList = Lists.newArrayList(field);
         Map<String, String> fieldMap = new HashMap<>();
         fieldMap.put(field, field);
-        Mockito.when(packetReaderProvider.getFields(anyString(), anyList(), anyString(), anyString())).thenReturn(fieldMap);
+        Mockito.when(packetReaderProvider.getFields(anyString(), anyList(), anyString(), anyString(), System.currentTimeMillis())).thenReturn(fieldMap);
 
-        Map<String, String> result = packetReader.getFields(id, fieldList, source, process, true);
+        Map<String, String> result = packetReader.getFields(id, fieldList, source, process, true, System.currentTimeMillis());
 
         assertTrue(result.size() == 1);
     }
@@ -115,9 +115,9 @@ public class PacketReaderTest {
         List<String> fieldList = Lists.newArrayList(field);
         Map<String, String> fieldMap = new HashMap<>();
         fieldMap.put(field, field);
-        Mockito.when(packetReaderProvider.getFields(anyString(), anyList(), anyString(), anyString())).thenReturn(fieldMap);
+        Mockito.when(packetReaderProvider.getFields(anyString(), anyList(), anyString(), anyString(), System.currentTimeMillis())).thenReturn(fieldMap);
 
-        Map<String, String> result = packetReader.getFields(id, fieldList, source, process, false);
+        Map<String, String> result = packetReader.getFields(id, fieldList, source, process, false, System.currentTimeMillis());
 
         assertTrue(result.size() == 1);
     }
@@ -128,9 +128,9 @@ public class PacketReaderTest {
         Document document = new Document();
         document.setValue("document");
 
-        Mockito.when(packetReaderProvider.getDocument(anyString(), anyString(), anyString(), anyString())).thenReturn(document);
+        Mockito.when(packetReaderProvider.getDocument(anyString(), anyString(), anyString(), anyString(), System.currentTimeMillis())).thenReturn(document);
 
-        Document result = packetReader.getDocument(id, docName, source, process);
+        Document result = packetReader.getDocument(id, docName, source, process, System.currentTimeMillis());
 
         assertTrue(result.equals(document));
     }
@@ -156,9 +156,9 @@ public class PacketReaderTest {
         BiometricRecord biometricRecord = new BiometricRecord();
         biometricRecord.setSegments(birTypeList);
 
-        Mockito.when(packetReaderProvider.getBiometric(anyString(), anyString(), anyList(), anyString(), anyString())).thenReturn(biometricRecord);
+        Mockito.when(packetReaderProvider.getBiometric(anyString(), anyString(), anyList(), anyString(), anyString(), System.currentTimeMillis())).thenReturn(biometricRecord);
 
-        BiometricRecord result = packetReader.getBiometric(id, "individualBiometrics", Lists.newArrayList(), source, process, true);
+        BiometricRecord result = packetReader.getBiometric(id, "individualBiometrics", Lists.newArrayList(), source, process, true, System.currentTimeMillis());
 
         assertTrue(result.equals(biometricRecord));
     }
@@ -168,9 +168,9 @@ public class PacketReaderTest {
         Map<String, String> metaMap = new HashMap<>();
         metaMap.put("operationsData","officerid:1234");
 
-        Mockito.when(packetReaderProvider.getMetaInfo(anyString(), anyString(), anyString())).thenReturn(metaMap);
+        Mockito.when(packetReaderProvider.getMetaInfo(anyString(), anyString(), anyString(), System.currentTimeMillis())).thenReturn(metaMap);
 
-        Map<String, String> result = packetReader.getMetaInfo(id, source, process, true);
+        Map<String, String> result = packetReader.getMetaInfo(id, source, process, true, System.currentTimeMillis());
 
         assertTrue(result.equals(metaMap));
     }
@@ -182,9 +182,9 @@ public class PacketReaderTest {
         List<Map<String, String>> auditList = new ArrayList<>();
         auditList.add(auditMap);
 
-        Mockito.when(packetReaderProvider.getAuditInfo(anyString(), anyString(), anyString())).thenReturn(auditList);
+        Mockito.when(packetReaderProvider.getAuditInfo(anyString(), anyString(), anyString(), System.currentTimeMillis())).thenReturn(auditList);
 
-        List<Map<String, String>> result = packetReader.getAudits(id, source, process, true);
+        List<Map<String, String>> result = packetReader.getAudits(id, source, process, true, System.currentTimeMillis());
 
         assertTrue(result.equals(auditList));
     }
@@ -196,9 +196,9 @@ public class PacketReaderTest {
         List<Map<String, String>> auditList = new ArrayList<>();
         auditList.add(auditMap);
 
-        Mockito.when(packetReaderProvider.validatePacket(anyString(), anyString(), anyString())).thenReturn(true);
+        Mockito.when(packetReaderProvider.validatePacket(anyString(), anyString(), anyString(), System.currentTimeMillis())).thenReturn(true);
 
-        boolean result = packetReader.validatePacket(id, source, process);
+        boolean result = packetReader.validatePacket(id, source, process, System.currentTimeMillis());
 
         assertTrue(result);
     }
@@ -207,7 +207,7 @@ public class PacketReaderTest {
     public void testProviderException() {
         PowerMockito.when(PacketHelper.isSourceAndProcessPresent(anyString(),anyString(),anyString(),any())).thenReturn(false);
 
-        packetReader.validatePacket(id, source, process);
+        packetReader.validatePacket(id, source, process, System.currentTimeMillis());
     }
     
     @Test
@@ -215,9 +215,9 @@ public class PacketReaderTest {
         Map<String, String> tags = new HashMap<>();
         tags.put("test", "testValue");
       
-        Mockito.when(packetKeeper.getTags(any())).thenReturn(tags);
+        Mockito.when(packetKeeper.getTags(any(), System.currentTimeMillis())).thenReturn(tags);
 
-        Map<String, String> expectedTags= packetReader.getTags("id");
+        Map<String, String> expectedTags= packetReader.getTags("id", System.currentTimeMillis());
 
         assertEquals(expectedTags,tags); 
     }
@@ -232,7 +232,7 @@ public class PacketReaderTest {
 
         Mockito.when(packetKeeper.getAll(any())).thenReturn(objectDtos);
 
-        List<ObjectDto> result = packetReader.info("id");
+        List<ObjectDto> result = packetReader.info("id", System.currentTimeMillis());
 
         assertEquals(objectDtos.size(), result.size());
     }

@@ -84,12 +84,12 @@ public class PacketValidator {
     private AuditLogEntry auditLogEntry;
 
 
-    public boolean validate(String id, String source, String process) throws IdObjectIOException, InvalidIdSchemaException, IOException, JsonProcessingException, PacketKeeperException, NoSuchAlgorithmException, JSONException {
-        boolean result = validateSchema(id, source, process);
+    public boolean validate(String id, String source, String process, long startTime) throws IdObjectIOException, InvalidIdSchemaException, IOException, JsonProcessingException, PacketKeeperException, NoSuchAlgorithmException, JSONException {
+        boolean result = validateSchema(id, source, process, startTime);
         if(result) {
             LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id, "Id object validation successful for process name : " + process);
             auditLogEntry.addAudit("Id object validation successful", eventId, eventName, eventType, null, null, id);
-            result = fileAndChecksumValidation(id, source, process);
+            result = fileAndChecksumValidation(id, source, process, startTime);
         } else {
             LOGGER.error(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id, "Id object validation failed for process name : " + process);
             auditLogEntry.addAudit("Id object validation failed", eventId, eventName, eventType, null, null, id);
@@ -98,13 +98,24 @@ public class PacketValidator {
         return result;
     }
 
-    private boolean validateSchema(String id, String source, String process) throws IOException, InvalidIdSchemaException, IdObjectIOException, JSONException {
+    private boolean validateSchema(String id, String source, String process, long startTime) throws IOException, InvalidIdSchemaException, IdObjectIOException, JSONException {
         Map<String, Object> objectMap = new HashMap<>();
         try {
+
+            LOGGER.info("THAM - Entering validateSchema method for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms");
+
             String idschemaValueFromMappingJson = idSchemaUtils.getIdschemaVersionFromMappingJson();
-            String idschemaVersion = reader.getField(id, idschemaValueFromMappingJson, source, process, false);
+            LOGGER.info("THAM - Fetch  idschemaValueFromMappingJson for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + idschemaValueFromMappingJson);
+
+            String idschemaVersion = reader.getField(id, idschemaValueFromMappingJson, source, process, false, startTime);
+            LOGGER.info("THAM - Fetch  idschemaVersion for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + idschemaVersion);
+
             List<String> allFields = idSchemaUtils.getDefaultFields(Double.valueOf(idschemaVersion));
-            Map<String, String> fieldsMap = reader.getFields(id, allFields, source, process, false);
+            LOGGER.info("THAM - Fetch  allFields for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + mapper.writeValueAsString(allFields));
+
+            Map<String, String> fieldsMap = reader.getFields(id, allFields, source, process, false, startTime);
+            LOGGER.info("THAM - Fetch  allFields from packet for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + mapper.writeValueAsString(fieldsMap));
+
             objectMap.putAll(fieldsMap);
 
             if (convertIdschemaToDouble)
@@ -114,6 +125,7 @@ public class PacketValidator {
             LinkedHashMap finalMap = new LinkedHashMap();
             finalMap.put(IDENTITY, loadDemographicIdentity(objectMap));
             JSONObject finalIdObject = new JSONObject(finalMap);
+            LOGGER.info("THAM - final Object for validation for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + mapper.writeValueAsString(finalIdObject));
 
             return idObjectValidator.validateIdObject(idSchemaUtils.getIdSchema(Double.valueOf(objectMap.get(
                     PacketManagerConstants.IDSCHEMA_VERSION).toString())), finalIdObject, Arrays.asList(fields.split(",")));
@@ -133,19 +145,28 @@ public class PacketValidator {
      * @return true, if successful
      * @throws IOException
      */
-    public boolean fileAndChecksumValidation(String id, String source, String process) throws IOException, JsonProcessingException, PacketKeeperException, NoSuchAlgorithmException {
+    public boolean fileAndChecksumValidation(String id, String source, String process, long startTime) throws IOException, JsonProcessingException, PacketKeeperException, NoSuchAlgorithmException {
         boolean isValid = false;
-        // perform file and checksum validation for each source
+        LOGGER.info("THAM - Entering  fileAndChecksumValidation method  for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " );
         for (String packetName : packetNames.split(",")) {
-            Packet packet = packetKeeper.getPacket(getPacketInfo(id, packetName, source, process));
+            Packet packet = packetKeeper.getPacket(getPacketInfo(id, packetName, source, process), startTime);
+            LOGGER.info("THAM - Fetch Packet from   fileAndChecksumValidation method  for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + mapper.writeValueAsString(packet));
+
             Map<String, String> finalMap = getMetaInfoJson(packet);
+            LOGGER.info("THAM - Unzip and get Metainfo from   fileAndChecksumValidation method  for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + mapper.writeValueAsString(finalMap));
+
             if (!finalMap.isEmpty()) {
 
                 List hashseq1List = finalMap.get("hashSequence1") != null ? mapper.readValue(finalMap.get("hashSequence1"), ArrayList.class) : null;
+                LOGGER.info("THAM - hashseq1List from   fileAndChecksumValidation method  for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + mapper.writeValueAsString(hashseq1List));
+
                 List hashseq2List = finalMap.get("hashSequence2") != null ? (ArrayList) mapper.readValue(finalMap.get("hashSequence2"), ArrayList.class) : null;
+                LOGGER.info("THAM - hashseq2List from   fileAndChecksumValidation method  for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + mapper.writeValueAsString(hashseq2List));
+
                 Map<String, InputStream> checksumMap = new HashMap<>();
 
                 boolean fileValidation = validateFiles(hashseq1List, hashseq2List, checksumMap, packet);
+                LOGGER.info("THAM - Validation files Completed in fileAndChecksumValidation method  for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms ");
 
                 if (fileValidation) {
                     LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id, "File validation successful for packet name : " + packetName);
@@ -156,7 +177,8 @@ public class PacketValidator {
                     return false;
                 }
 
-                boolean checksumValidation = checksumValidation(hashseq1List, hashseq2List, checksumMap, packet);
+                boolean checksumValidation = checksumValidation(hashseq1List, hashseq2List, checksumMap, packet, startTime, id);
+                LOGGER.info("THAM - checksumValidation Completed in fileAndChecksumValidation method  for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms ");
 
                 if (checksumValidation) {
                     LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id, "Checksum validation successful for packet name : " + packetName);
@@ -250,7 +272,7 @@ public class PacketValidator {
         return (notFoundFiles.size() == 0);
     }
 
-    private boolean checksumValidation(List hashseq1List, List hashseq2List, Map<String, InputStream> checksumMap, Packet packet) throws JsonProcessingException, IOException, NoSuchAlgorithmException {
+    private boolean checksumValidation(List hashseq1List, List hashseq2List, Map<String, InputStream> checksumMap, Packet packet, long startTime, String id) throws JsonProcessingException, IOException, NoSuchAlgorithmException {
         List<FieldValueArray> hashSequence1 = new ArrayList<>();
         List<FieldValueArray> hashSequence2 = new ArrayList<>();
         boolean isdataCheckSumEqual = false;
@@ -261,6 +283,7 @@ public class PacketValidator {
                 FieldValueArray fieldValueArray = mapper.readValue(JsonUtils.javaObjectToJsonString(o), FieldValueArray.class);
                 hashSequence1.add(fieldValueArray);
             }
+            LOGGER.info("THAM - hashSequence1 Completed in checksumValidation method  for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + mapper.writeValueAsString(hashSequence1));
         }
 
         if (hashseq2List != null && !hashseq2List.isEmpty()) {
@@ -268,11 +291,16 @@ public class PacketValidator {
                 FieldValueArray fieldValueArray = mapper.readValue(JsonUtils.javaObjectToJsonString(o), FieldValueArray.class);
                 hashSequence2.add(fieldValueArray);
             }
+            LOGGER.info("THAM - hashSequence2 Completed in checksumValidation method  for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + mapper.writeValueAsString(hashSequence2));
+
         }
 
         // Getting hash bytes from packet
         InputStream dataHashStream = ZipUtils.unzipAndGetFile(packet.getPacket(), "PACKET_DATA_HASH");
+        LOGGER.info("THAM - Unzip Packet and get dataHashStream Completed in checksumValidation method  for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms ");
+
         InputStream operationsHashStream = ZipUtils.unzipAndGetFile(packet.getPacket(), "PACKET_OPERATIONS_HASH");
+        LOGGER.info("THAM - Unzip Packet and get operationsHashStream Completed in checksumValidation method  for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms ");
 
         if (dataHashStream != null) {
             byte[] dataHashByte = IOUtils.toByteArray(dataHashStream);

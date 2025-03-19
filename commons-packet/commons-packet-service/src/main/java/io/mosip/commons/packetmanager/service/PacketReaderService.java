@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.Maps;
 import io.mosip.commons.packet.util.PacketHelper;
 import org.json.simple.JSONObject;
@@ -89,15 +90,19 @@ public class PacketReaderService {
     @Autowired
     private ObjectMapper objectMapper;
 
-    public InfoResponseDto info(String id) {
-        return mergeProcessWithMultipleIteration(infoInternal(id));
+    public InfoResponseDto info(String id, long startTime) {
+        return mergeProcessWithMultipleIteration(infoInternal(id, startTime));
     }
 
-    private InfoResponseDto infoInternal(String id) {
+    private InfoResponseDto infoInternal(String id, Long startTime) {
         try {
-            List<ObjectDto> allObjects = packetReader.info(id);
+            LOGGER.info("THAM - Entering infoInternal method for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms");
+            List<ObjectDto> allObjects = packetReader.info(id, startTime);
+            LOGGER.info("THAM - packetReader.info(id) Completed ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms");
+
             List<ContainerInfoDto> containerInfoDtos = new ArrayList<>();
             for (ObjectDto o : allObjects) {
+                LOGGER.info("THAM - Fetched Object for Process for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + objectMapper.writeValueAsString(o));
                 if (!containerInfoDtos.stream().anyMatch(info -> info.getSource().equalsIgnoreCase(o.getSource()) && info.getProcess().equalsIgnoreCase(o.getProcess()))) {
                     ContainerInfoDto containerInfo = new ContainerInfoDto();
                     containerInfo.setSource(o.getSource());
@@ -105,10 +110,14 @@ public class PacketReaderService {
                     containerInfo.setLastModified(o.getLastModified());
 
                     //get demographic fields
-                    Set<String> demographics = packetReader.getAllKeys(id, containerInfo.getSource(), containerInfo.getProcess());
+                    Set<String> demographics = packetReader.getAllKeys(id, containerInfo.getSource(), containerInfo.getProcess(), startTime);
                     // get biometrics
+                    LOGGER.info("THAM - Fetched Demographic Details completed for Process for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + objectMapper.writeValueAsString(o));
+
                     List<BiometricsDto> biometrics = null;
-                    BiometricRecord br = packetReader.getBiometric(id, getKey(), Lists.newArrayList(), o.getSource(), o.getProcess(), false);
+                    BiometricRecord br = packetReader.getBiometric(id, getKey(), Lists.newArrayList(), o.getSource(), o.getProcess(), false, startTime);
+                    LOGGER.info("THAM - Fetched Biometrics Details completed for Process for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + objectMapper.writeValueAsString(o));
+
                     if (br != null && !CollectionUtils.isEmpty(br.getSegments())) {
                         Map<String, List<String>> biomap = new HashMap<>();
                         for (BIR b : br.getSegments()) {
@@ -139,9 +148,10 @@ public class PacketReaderService {
                     containerInfo.setBiometrics(biometrics);
                     containerInfoDtos.add(containerInfo);
                 }
+                LOGGER.info("THAM - Prepared containerInfoDtoList object for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + objectMapper.writeValueAsString(containerInfoDtos));
             }
             // get tags
-            Map<String, String> tags = packetReader.getTags(id);
+            Map<String, String> tags = packetReader.getTags(id, startTime);
 
             InfoResponseDto infoResponseDto = new InfoResponseDto();
             infoResponseDto.setApplicationId(id);
@@ -177,7 +187,7 @@ public class PacketReaderService {
     }
 
 
-    public SourceProcessDto getSourceAndProcess(String id, String source, String process) {
+    public SourceProcessDto getSourceAndProcess(String id, String source, String process, long startTime) {
         if (StringUtils.isEmpty(source)) {
             try {
                 if (defaultStrategy.equalsIgnoreCase(DefaultStrategy.DEFAULT_PRIORITY.getValue())) {
@@ -189,16 +199,30 @@ public class PacketReaderService {
                 throw new SourceNotPresentException(e);
             }
         }
-        ObjectDto objectDto = searchProcessWithLatestIteration(id, source, process);
-        return new SourceProcessDto(objectDto.getSource(), objectDto.getProcess());
+        ObjectDto objectDto = searchProcessWithLatestIteration(id, source, process, startTime);
+        SourceProcessDto sourceProcessDto = new SourceProcessDto(objectDto.getSource(), objectDto.getProcess());
+        LOGGER.info("THAM - sourceProcessDto for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms");
+        return sourceProcessDto;
     }
 
-    public SourceProcessDto getSourceAndProcess(String id, String field, String source, String process) {
+    public SourceProcessDto getSourceAndProcess(String id, String field, String source, String process, Long startTime) {
         SourceProcessDto sourceProcessDto = null;
-        InfoResponseDto infoResponseDto = infoInternal(id);
+        LOGGER.info("THAM - Entering getSourceAndProcess method for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms");
+        InfoResponseDto infoResponseDto = infoInternal(id, startTime);
+        try {
+            LOGGER.info("THAM - infoResponseDto for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + objectMapper.writeValueAsString(infoResponseDto));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
         List<ContainerInfoDto> info = infoResponseDto.getInfo();
         // sorting in reverse order by process name to search from latest iteration first.
         Collections.sort(info, (i1, i2) -> extractInt(i2.getProcess()) - (extractInt(i1.getProcess())));
+        try {
+            LOGGER.info("THAM - Sorting Process Based on the Number Mentioned for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms" +  " " + objectMapper.writeValueAsString(info));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
         if (StringUtils.isEmpty(source)) {
             try {
                 if (defaultStrategy.equalsIgnoreCase(DefaultStrategy.DEFAULT_PRIORITY.getValue())) {
@@ -216,6 +240,12 @@ public class PacketReaderService {
             sourceProcessDto = containerInfoDto != null ?
                     new SourceProcessDto(containerInfoDto.getSource(), containerInfoDto.getProcess()) : null;
         }
+        try {
+            LOGGER.info("THAM - Exist getSourceAndProcess method with sourceProcessDto for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + objectMapper.writeValueAsString(sourceProcessDto));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
         return sourceProcessDto;
     }
 
@@ -287,8 +317,8 @@ public class PacketReaderService {
         return null;
     }
 
-    private ObjectDto searchProcessWithLatestIteration(String id, String source, String process) {
-        List<ObjectDto> allObjects = packetReader.info(id);
+    private ObjectDto searchProcessWithLatestIteration(String id, String source, String process, long startTime) {
+        List<ObjectDto> allObjects = packetReader.info(id, startTime);
         Collections.sort(allObjects, (i1, i2) -> extractInt(i2.getProcess()) - (extractInt(i1.getProcess())));
 
         Optional<ObjectDto> objectDto = allObjects.stream().filter(obj ->
@@ -382,10 +412,10 @@ public class PacketReaderService {
         return mappingJson;
     }
 
-    public TagResponseDto getTags(TagRequestDto tagRequestDto) {
+    public TagResponseDto getTags(TagRequestDto tagRequestDto, long startTime) {
     	try {
 			Map<String, String> tags = new HashMap<String, String>();
-			Map<String, String> existingTags = packetReader.getTags(tagRequestDto.getId());
+			Map<String, String> existingTags = packetReader.getTags(tagRequestDto.getId(), startTime);
 			List<String> tagNames=tagRequestDto.getTagNames();
 		    TagResponseDto tagResponseDto = new TagResponseDto();
 			if (tagNames != null && !tagNames.isEmpty()) {

@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.mosip.commons.packet.facade.PacketReader;
 import io.mosip.kernel.biometrics.constant.BiometricType;
 import io.mosip.kernel.core.util.JsonUtils;
@@ -92,6 +93,9 @@ public class PacketReaderImpl implements IPacketReader {
 	@Autowired
 	private PacketValidator packetValidator;
 
+	@Autowired
+	private ObjectMapper objectMapper;
+
 	/**
 	 * Perform packet validations and audit errors. List of validations - 1. schema
 	 * & idobject reference validation 2. files validation 3. decrypted packet
@@ -103,9 +107,9 @@ public class PacketReaderImpl implements IPacketReader {
 	 * @return
 	 */
 	@Override
-	public boolean validatePacket(String id, String source, String process) {
+	public boolean validatePacket(String id, String source, String process, long startTime) {
 		try {
-			return packetValidator.validate(id, source, process);
+			return packetValidator.validate(id, source, process, startTime);
 		} catch (Exception e) {
 			LOGGER.error(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
 					"Packet Validation exception : " + ExceptionUtils.getStackTrace(e));
@@ -125,22 +129,23 @@ public class PacketReaderImpl implements IPacketReader {
 	 */
 	@Override
 	@Cacheable(value = "packets", key = "{'allFields'.concat('-').concat(#id).concat('-').concat(#process)}")
-	public Map<String, Object> getAll(String id, String source, String process) {
+	public Map<String, Object> getAll(String id, String source, String process, long startTime) {
 //		LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
 //				"Getting all fields :: entry");
-		Long startTime = System.nanoTime();
 		Map<String, Object> finalMap = new LinkedHashMap<>();
 		String[] sourcePacketNames = packetNames.split(",");
 
 		try {
 			for (String srcPacket : sourcePacketNames) {
-				Packet packet = packetKeeper.getPacket(getPacketInfo(id, srcPacket, source, process));
+				LOGGER.info("THAM - Looping  sourcePacketNames for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + srcPacket);
+				Packet packet = packetKeeper.getPacket(getPacketInfo(id, srcPacket, source, process), startTime);
+				LOGGER.info("THAM - get Packets from Packet Store for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + srcPacket);
 				InputStream idJsonStream = ZipUtils.unzipAndGetFile(packet.getPacket(), "ID");
-				LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-						"getPacket - Unzip Packet "  + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.nanoTime()-startTime, TimeUnit.NANOSECONDS));
+				LOGGER.info("THAM - Unzip decrypted Packet  for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + srcPacket);
 				if (idJsonStream != null) {
 					byte[] bytearray = IOUtils.toByteArray(idJsonStream);
 					String jsonString = new String(bytearray);
+					LOGGER.info("THAM - Data After unzip  for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + jsonString);
 					LinkedHashMap<String, Object> currentIdMap = (LinkedHashMap<String, Object>) mapper
 							.readValue(jsonString, LinkedHashMap.class).get(IDENTITY);
 
@@ -160,8 +165,7 @@ public class PacketReaderImpl implements IPacketReader {
 							}
 						}
 					});
-					LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-							"getPacket - Mapping Fields"  + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.nanoTime()-startTime, TimeUnit.NANOSECONDS));
+					LOGGER.info("THAM - Data After final format for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + objectMapper.writeValueAsString(finalMap));
 				}
 			}
 		} catch (Exception e) {
@@ -181,10 +185,10 @@ public class PacketReaderImpl implements IPacketReader {
 	}
 
 	@Override
-	public String getField(String id, String field, String source, String process) {
-//		LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-//				"getField :: for - " + field);
-		Map<String, Object> allFields = getAll(id, source, process);
+	public String getField(String id, String field, String source, String process, long startTime) {
+		LOGGER.info("THAM - Entering  getField method for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms ");
+
+		Map<String, Object> allFields = getAll(id, source, process, startTime);
 		if (allFields != null) {
 			Object fieldObj = allFields.get(field);
 			return fieldObj != null ? fieldObj.toString() : null;
@@ -193,11 +197,11 @@ public class PacketReaderImpl implements IPacketReader {
 	}
 
 	@Override
-	public Map<String, String> getFields(String id, List<String> fields, String source, String process) {
-//		LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-//				"getFields :: for - " + fields.toString());
+	public Map<String, String> getFields(String id, List<String> fields, String source, String process, long startTime) {
+		LOGGER.info("THAM - Entering  getFields method for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms ");
+
 		Map<String, String> result = new HashMap<>();
-		Map<String, Object> allFields = getAll(id, source, process);
+		Map<String, Object> allFields = getAll(id, source, process, startTime);
 		fields.stream().forEach(
 				field -> result.put(field, allFields.get(field) != null ? allFields.get(field).toString() : null));
 
@@ -205,19 +209,29 @@ public class PacketReaderImpl implements IPacketReader {
 	}
 
 	@Override
-	public Document getDocument(String id, String documentName, String source, String process) {
-//		LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-//				"getDocument :: for - " + documentName);
+	public Document getDocument(String id, String documentName, String source, String process, long startTime) {
+		LOGGER.info("THAM - Entering  getDocument method for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms ");
+
 		try {
-			String schemaVersionString = packetReader.getField(id, idSchemaUtils.getIdschemaVersionFromMappingJson(), source, process, false);
+			String schemaVersionString = packetReader.getField(id, idSchemaUtils.getIdschemaVersionFromMappingJson(), source, process, false, startTime);
 			Double schemaVersion = schemaVersionString != null ? Double.valueOf(schemaVersionString) : null;
-			String documentString = packetReader.getField(id, documentName, source, process, false);
+			LOGGER.info("THAM - Fetch schemaVersion for getDocument method for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + schemaVersionString);
+
+			String documentString = packetReader.getField(id, documentName, source, process, false, startTime);
+			LOGGER.info("THAM - Fetch documentString for getDocument method for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + documentString);
+
 			if (documentString != null && schemaVersion != null) {
 				JSONObject documentMap = new JSONObject(documentString);
 				String packetName = idSchemaUtils.getSource(documentName, schemaVersion);
-				Packet packet = packetKeeper.getPacket(getPacketInfo(id, packetName, source, process));
+				LOGGER.info("THAM - Fetch packetName for getDocument method for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + packetName);
+
+				Packet packet = packetKeeper.getPacket(getPacketInfo(id, packetName, source, process), startTime);
+				LOGGER.info("THAM - Fetch packet for getDocument method for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + objectMapper.writeValueAsString(packet));
+
 				String value = documentMap.has(VALUE) ? documentMap.get(VALUE).toString() : null;
 				InputStream documentStream = ZipUtils.unzipAndGetFile(packet.getPacket(), value);
+				LOGGER.info("THAM - Unzip  packet for getDocument method for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms ");
+
 				if (documentStream != null) {
 					Document document = new Document();
 					document.setDocument(IOUtils.toByteArray(documentStream));
@@ -225,6 +239,8 @@ public class PacketReaderImpl implements IPacketReader {
 					document.setType(documentMap.has(TYPE) ? documentMap.get(TYPE).toString() : null);
 					document.setFormat(documentMap.has(FORMAT) ? documentMap.get(FORMAT).toString() : null);
 					document.setRefNumber(documentMap.has(REFNUMBER) ? documentMap.get(REFNUMBER).toString() : null);
+					LOGGER.info("THAM - Final Document for getDocument method for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + objectMapper.writeValueAsString(document));
+
 					return document;
 				}
 			}
@@ -238,20 +254,23 @@ public class PacketReaderImpl implements IPacketReader {
 
 	@Override
 	public BiometricRecord getBiometric(String id, String biometricFieldName, List<String> modalities, String source,
-			String process) {
-//		LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-//				"getBiometric :: for - " + biometricFieldName);
+			String process, long startTime) {
+		LOGGER.info("THAM - Entering getBiometric method for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms ");
+
 		BiometricRecord biometricRecord = null;
 		String packetName = null;
 		String fileName = null;
 		try {
-			String bioString = packetReader.getField(id, biometricFieldName, source, process, false);//(String) idobjectMap.get(biometricFieldName);
+			String bioString = packetReader.getField(id, biometricFieldName, source, process, false, startTime);//(String) idobjectMap.get(biometricFieldName);
+			LOGGER.info("THAM - packetReader getField method for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + bioString);
+
 			JSONObject biometricMap = null;
 			if (bioString != null)
 				biometricMap = new JSONObject(bioString);
 			if (bioString == null || biometricMap == null || biometricMap.isNull(VALUE)) {
 				// biometric file not present in idobject. Search in meta data.
-				Map<String, String> metadataMap = getMetaInfo(id, source, process);
+				LOGGER.info("THAM - Entering Meta INfo since value is null for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms ");
+				Map<String, String> metadataMap = getMetaInfo(id, source, process, startTime);
 				String operationsData = metadataMap.get(META_INFO_OPERATIONS_DATA);
 				if (StringUtils.isNotEmpty(operationsData)) {
 					JSONArray jsonArray = new JSONArray(operationsData);
@@ -267,20 +286,32 @@ public class PacketReaderImpl implements IPacketReader {
 				}
 			} else {
 				String idSchemaVersion = packetReader.getField(id,
-						idSchemaUtils.getIdschemaVersionFromMappingJson(), source, process, false);
+						idSchemaUtils.getIdschemaVersionFromMappingJson(), source, process, false, startTime);
+				LOGGER.info("THAM - Fetching ID Schema Version for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + idSchemaVersion);
+
 				Double schemaVersion = idSchemaVersion != null ? Double.valueOf(idSchemaVersion) : null;
 				packetName = idSchemaUtils.getSource(biometricFieldName, schemaVersion);
+				LOGGER.info("THAM - Fetching packetName for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + packetName);
+
 				fileName = biometricMap.get(VALUE).toString();
 			}
 
 			if (packetName == null || fileName == null)
 				return null;
 
-			Packet packet = packetKeeper.getPacket(getPacketInfo(id, packetName, source, process));
+			LOGGER.info("THAM - getPacket started for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + packetName);
+
+			Packet packet = packetKeeper.getPacket(getPacketInfo(id, packetName, source, process), startTime);
+			LOGGER.info("THAM - getPacket fetched for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + objectMapper.writeValueAsString(packet));
+
 			InputStream biometrics = ZipUtils.unzipAndGetFile(packet.getPacket(), fileName);
+			LOGGER.info("THAM - Unzip the packet to fetch biometrics for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " );
+
 			if (biometrics == null)
 				return null;
 			BIR bir = CbeffValidator.getBIRFromXML(IOUtils.toByteArray(biometrics));
+			LOGGER.info("THAM - Create BIR using cbeff for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + objectMapper.writeValueAsString(bir));
+
 			biometricRecord = new BiometricRecord();
 			if(bir.getOthers() != null) {
 				HashMap<String, String> others = new HashMap<>();
@@ -302,19 +333,28 @@ public class PacketReaderImpl implements IPacketReader {
 			}
 			throw new GetBiometricException(e.getMessage());
 		}
+		try {
+			LOGGER.info("THAM - biometricRecord record for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + objectMapper.writeValueAsString(biometricRecord));
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
 
 		return biometricRecord;
 	}
 
 	@Override
-	public Map<String, String> getMetaInfo(String id, String source, String process) {
+	public Map<String, String> getMetaInfo(String id, String source, String process, long startTime) {
 		Map<String, String> finalMap = new LinkedHashMap<>();
 		String[] sourcePacketNames = packetNames.split(",");
+		LOGGER.info("THAM - Entering  getMetaInfo method for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms ");
 
 		try {
 			for (String packetName : sourcePacketNames) {
-				Packet packet = packetKeeper.getPacket(getPacketInfo(id, packetName, source, process));
+				LOGGER.info("THAM - get Packet started for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + packetName);
+				Packet packet = packetKeeper.getPacket(getPacketInfo(id, packetName, source, process), startTime);
+				LOGGER.info("THAM - fetched Packet for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms ");
 				InputStream idJsonStream = ZipUtils.unzipAndGetFile(packet.getPacket(), "PACKET_META_INFO");
+				LOGGER.info("THAM - Unzip the  Packet for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms ");
 				if (idJsonStream != null) {
 					byte[] bytearray = IOUtils.toByteArray(idJsonStream);
 					String jsonString = new String(bytearray);
@@ -343,18 +383,30 @@ public class PacketReaderImpl implements IPacketReader {
 			}
 			throw new GetAllMetaInfoException(e.getMessage());
 		}
+		try {
+			LOGGER.info("THAM - getMetaInfo final Map values for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + objectMapper.writeValueAsString(finalMap));
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+
 		return finalMap;
 	}
 
 	@Override
-	public List<Map<String, String>> getAuditInfo(String id, String source, String process) {
-//		LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id, "getAuditInfo :: enrtry");
+	public List<Map<String, String>> getAuditInfo(String id, String source, String process, long startTime) {
+		LOGGER.info("THAM - Entering getAuditInfo method  for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms ");
 		List<Map<String, String>> finalMap = new ArrayList<>();
 		String[] sourcePacketNames = packetNames.split(",");
 		try {
 			for (String srcPacket : sourcePacketNames) {
-				Packet packet = packetKeeper.getPacket(getPacketInfo(id, srcPacket, source, process));
+				LOGGER.info("THAM - get source packet for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + srcPacket);
+
+				Packet packet = packetKeeper.getPacket(getPacketInfo(id, srcPacket, source, process), startTime);
+				LOGGER.info("THAM - get packet for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + objectMapper.writeValueAsString(packet));
+
 				InputStream auditJson = ZipUtils.unzipAndGetFile(packet.getPacket(), "audit");
+				LOGGER.info("THAM - Unzip Packet for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms ");
+
 				if (auditJson != null) {
 					byte[] bytearray = IOUtils.toByteArray(auditJson);
 					String jsonString = new String(bytearray);
@@ -375,6 +427,12 @@ public class PacketReaderImpl implements IPacketReader {
 			}
 			throw new GetAllIdentityException(e.getMessage());
 		}
+		try {
+			LOGGER.info("THAM - FinalMap for getAudit Method for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + objectMapper.writeValueAsString(finalMap));
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+
 		return finalMap;
 	}
 

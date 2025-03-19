@@ -56,14 +56,14 @@ public class PacketReader {
      * @return String field
      */
     @PreAuthorize("hasRole('DATA_READ')")
-    public String getField(String id, String field, String source, String process, boolean bypassCache) {
+    public String getField(String id, String field, String source, String process, boolean bypassCache, long startTime) {
         LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
                 "getField for fields : " + field + " source : " + source + " process : " + process + " Cache : " + bypassCache);
         String value;
         if (bypassCache)
-            value = getProvider(source, process).getField(id, field, source, process);
+            value = getProvider(source, process).getField(id, field, source, process, startTime);
         else {
-            Optional<Object> optionalValue = getAllFields(id, source, process).entrySet().stream().filter(m-> m.getKey().equalsIgnoreCase(field) && m.getValue()!=null).map(m -> m.getValue()).findAny();
+            Optional<Object> optionalValue = getAllFields(id, source, process, startTime).entrySet().stream().filter(m-> m.getKey().equalsIgnoreCase(field) && m.getValue()!=null).map(m -> m.getValue()).findAny();
             value = optionalValue.isPresent() ? optionalValue.get().toString() : null;
         }
         return value;
@@ -79,14 +79,14 @@ public class PacketReader {
      * @return Map fields
      */
     @PreAuthorize("hasRole('DATA_READ')")
-    public Map<String, String> getFields(String id, List<String> fields, String source, String process, boolean bypassCache) {
+    public Map<String, String> getFields(String id, List<String> fields, String source, String process, boolean bypassCache, long startTime) {
         LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
                 "getFields for fields : " + fields.toString() + " source : " + source + " process : " + process+ " Cache : " + bypassCache);
         Map<String, String> values;
         if (bypassCache)
-            values = getProvider(source, process).getFields(id, fields, source, process);
+            values = getProvider(source, process).getFields(id, fields, source, process, startTime);
         else {
-            values = getAllFields(id, source, process).entrySet()
+            values = getAllFields(id, source, process, startTime).entrySet()
                     .stream().filter(m -> fields.contains(m.getKey())).collect(Collectors.toMap(m -> m.getKey(), m -> m.getValue() != null ? m.getValue().toString() : null));
         }
         return values;
@@ -103,11 +103,10 @@ public class PacketReader {
      */
     @PreAuthorize("hasRole('DOCUMENT_READ')")
     @Cacheable(value = "packets", key = "'documents'.concat('-').concat(#id).concat('-').concat(#documentName).concat('-').concat(#source).concat('-').concat(#process)")
-    public Document getDocument(String id, String documentName, String source, String process) {
+    public Document getDocument(String id, String documentName, String source, String process, long startTime) {
         LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
                 "getDocument for documentName : " + documentName + " source : " + source + " process : " + process);
-        Long startTime = System.nanoTime();
-        Document document=  getProvider(source, process).getDocument(id, documentName, source, process);
+        Document document=  getProvider(source, process).getDocument(id, documentName, source, process, startTime);
         LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
                 "getDocument - Object Reading for field : " + documentName + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.nanoTime()-startTime, TimeUnit.NANOSECONDS));
         return document;
@@ -125,11 +124,10 @@ public class PacketReader {
      */
     @PreAuthorize("hasRole('BIOMETRIC_READ')")
     @Cacheable(value = "packets", key = "'biometrics'.concat('-').#id.concat('-').concat(#person).concat('-').concat(#modalities).concat('-').concat(#source).concat('-').concat(#process)", condition = "#bypassCache == false")
-    public BiometricRecord getBiometric(String id, String person, List<String> modalities, String source, String process, boolean bypassCache) {
+    public BiometricRecord getBiometric(String id, String person, List<String> modalities, String source, String process, boolean bypassCache, Long startTime) {
         LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
                 "getBiometric for source : " + source + " process : " + process);
-        Long startTime = System.nanoTime();
-        BiometricRecord biometricRecord =  getProvider(source, process).getBiometric(id, person, modalities, source, process);
+        BiometricRecord biometricRecord =  getProvider(source, process).getBiometric(id, person, modalities, source, process, startTime);
         try {
             LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
                     "getBiometric - Object Reading for field : " + person + "[" + objectMapper.writeValueAsString(modalities) + "]"  + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.nanoTime()-startTime, TimeUnit.NANOSECONDS));
@@ -150,11 +148,10 @@ public class PacketReader {
      */
     @PreAuthorize("hasRole('METADATA_READ')")
     @Cacheable(value = "packets", key = "{'metaInfo'.concat('-').concat(#id).concat('-').concat(#source).concat('-').concat(#process)}", condition = "#bypassCache == false")
-    public Map<String, String> getMetaInfo(String id, String source, String process, boolean bypassCache) {
+    public Map<String, String> getMetaInfo(String id, String source, String process, boolean bypassCache, long startTime) {
         LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
                 "getMetaInfo for source : " + source + " process : " + process);
-        Long startTime = System.nanoTime();
-        Map<String, String> metaMap=  getProvider(source, process).getMetaInfo(id, source, process);
+        Map<String, String> metaMap=  getProvider(source, process).getMetaInfo(id, source, process, startTime);
         LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
                 "getMetaInfo - Object Reading"  + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.nanoTime()-startTime, TimeUnit.NANOSECONDS));
         return metaMap;
@@ -170,13 +167,15 @@ public class PacketReader {
      * @return
      */
     @PreAuthorize("hasRole('DATA_READ')")
-    public List<ObjectDto> info(String id) {
-        LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-                "info called");
-        Long startTime = System.nanoTime();
+    public List<ObjectDto> info(String id, Long startTime) {
+        LOGGER.info("THAM - Entering info method for ID " + id + " " + (System.nanoTime() - startTime) + "ms");
         List<ObjectDto> objectList =  packetKeeper.getAll(id);
-        LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-                "info - Object Reading From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.nanoTime()-startTime, TimeUnit.NANOSECONDS));
+        try {
+            LOGGER.info("THAM - Existing info method for ID " + id + " " + (System.nanoTime() - startTime) + "ms " +  objectMapper.writeValueAsString(objectList));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
         return objectList;
     }
 
@@ -189,10 +188,10 @@ public class PacketReader {
      * @return
      */
     @PreAuthorize("hasRole('DATA_READ')")
-    public Set<String> getAllKeys(String id, String source, String process) {
+    public Set<String> getAllKeys(String id, String source, String process, long startTime) {
         LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
                 "getAllKeys for source : " + source + " process : " + process);
-        return getProvider(source, process).getAll(id, source, process).keySet();
+        return getProvider(source, process).getAll(id, source, process, startTime).keySet();
     }
 
     /**
@@ -203,10 +202,10 @@ public class PacketReader {
      * @param process : the process
      * @return Map fields
      */
-    private Map<String, Object> getAllFields(String id, String source, String process) {
+    private Map<String, Object> getAllFields(String id, String source, String process, long startTime) {
         LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
                 "getAllFields for source : " + source + " process : " + process);
-        return getProvider(source, process).getAll(id, source, process);
+        return getProvider(source, process).getAll(id, source, process, startTime);
     }
 
     /**
@@ -218,28 +217,28 @@ public class PacketReader {
      * @return Map fields
      */
     @Cacheable(value = "packets", key = "{#id.concat('-').concat(#source).concat('-').concat(#process)}", condition = "#bypassCache == false")
-    public List<Map<String, String>> getAudits(String id, String source, String process, boolean bypassCache) {
+    public List<Map<String, String>> getAudits(String id, String source, String process, boolean bypassCache, long startTime) {
         LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
                 "getAudits for source : " + source + " process : " + process);
-        Long startTime = System.nanoTime();
-        List<Map<String, String>> map =  getProvider(source, process).getAuditInfo(id, source, process);
+        List<Map<String, String>> map =  getProvider(source, process).getAuditInfo(id, source, process, startTime);
         LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
                 "getAudits - Object Reading"  + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.nanoTime()-startTime, TimeUnit.NANOSECONDS));
         return map;
     }
 
     @Cacheable(value = "tags", key = "{#id}")
-    public  Map<String, String>  getTags(String id) {
-        Long startTime = System.nanoTime();
-        Map<String, String> tags = packetKeeper.getTags(id);
-        LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-                "getTags - Object Reading  From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.nanoTime()-startTime, TimeUnit.NANOSECONDS));
+    public  Map<String, String>  getTags(String id, long startTime) {
+        Map<String, String> tags = packetKeeper.getTags(id, startTime);
+        try {
+            LOGGER.info("THAM - Tags Prepared for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms "  + objectMapper.writeValueAsString(tags));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
         return tags;
     }
 
-    public boolean validatePacket(String id, String source, String process) {
-        Long startTime = System.nanoTime();
-        boolean valid =  getProvider(source, process).validatePacket(id, source, process);
+    public boolean validatePacket(String id, String source, String process, long startTime) {
+        boolean valid =  getProvider(source, process).validatePacket(id, source, process, startTime);
         LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
                 "validatePacket - Object Reading"  + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.nanoTime()-startTime, TimeUnit.NANOSECONDS));
         return valid;

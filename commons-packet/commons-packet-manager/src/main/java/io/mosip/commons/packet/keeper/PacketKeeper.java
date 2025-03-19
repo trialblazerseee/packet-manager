@@ -2,11 +2,13 @@ package io.mosip.commons.packet.keeper;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.commons.packet.exception.ObjectDoesnotExistsException;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -93,6 +95,9 @@ public class PacketKeeper {
 
     private static final String UNDERSCORE = "_";
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     /**
      * Check packet integrity.
      *
@@ -133,26 +138,27 @@ public class PacketKeeper {
      * @param packetInfo : packet info
      * @return : Packet
      */
-    public Packet getPacket(PacketInfo packetInfo) throws PacketKeeperException {
+    public Packet getPacket(PacketInfo packetInfo, Long startTime) throws PacketKeeperException {
         try {
-            Long startTime = System.nanoTime();
+            LOGGER.info("THAM - Entering getPackets method for ID " + packetInfo.getId() + " " + (System.currentTimeMillis() - startTime) + "ms " + objectMapper.writeValueAsString(packetInfo));
             InputStream is = getAdapter().getObject(PACKET_MANAGER_ACCOUNT, packetInfo.getId(), packetInfo.getSource(),
                     packetInfo.getProcess(), getName(packetInfo.getId(), packetInfo.getPacketName()));
-            LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, packetInfo.getId(),
-                    "getPacket - Object Reading "  + " source : " + packetInfo.getSource() + " process : " + packetInfo.getProcess() + " From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.nanoTime()-startTime, TimeUnit.NANOSECONDS));
+            LOGGER.info("THAM - Read Packet from Object Store completed for ID " + packetInfo.getId() + " " + (System.currentTimeMillis() - startTime) + "ms ");
+
             if (is == null) {
                 LOGGER.error(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID,
                         getName(packetInfo.getId(), packetInfo.getPacketName()), packetInfo.getProcess() + " Packet is not present in packet store.");
                 throw new PacketKeeperException(ErrorCode.PACKET_NOT_FOUND.getErrorCode(), ErrorCode.PACKET_NOT_FOUND.getErrorMessage());
             }
             byte[] encryptedSubPacket = IOUtils.toByteArray(is);
+            LOGGER.info("THAM - Encrypted sub Packet Value from ObjectStore for ID " + packetInfo.getId() + " " + (System.currentTimeMillis() - startTime) + "ms " + (new String(encryptedSubPacket, StandardCharsets.UTF_8)));
 
             Packet packet = new Packet();
             Map<String, Object> metaInfo = getAdapter().getMetaData(PACKET_MANAGER_ACCOUNT, packetInfo.getId(),
                     packetInfo.getSource(), packetInfo.getProcess(), getName(packetInfo.getId(), packetInfo.getPacketName()));
-            LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, packetInfo.getId(),
-                    "getPacket - Reading MetaInfo "  + " source : " + packetInfo.getSource() + " process : " + packetInfo.getProcess() + " From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.nanoTime()-startTime, TimeUnit.NANOSECONDS));
-            if (metaInfo != null && !metaInfo.isEmpty())
+            LOGGER.info("THAM - Read MetaInfo from Object Store completed for ID " + packetInfo.getId() + " " + (System.currentTimeMillis() - startTime) + "ms " + objectMapper.writeValueAsString(metaInfo));
+
+             if (metaInfo != null && !metaInfo.isEmpty())
                 packet.setPacketInfo(PacketManagerHelper.getPacketInfo(metaInfo));
             else {
                 LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID,
@@ -161,8 +167,7 @@ public class PacketKeeper {
             }
             byte[] subPacket = getCryptoService().decrypt(helper.getRefId(
                     packet.getPacketInfo().getId(), packet.getPacketInfo().getRefId()), encryptedSubPacket);
-            LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, packetInfo.getId(),
-                    "getPacket - Decrypt Packet "  + " source : " + packetInfo.getSource() + " process : " + packetInfo.getProcess() + " From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.nanoTime()-startTime, TimeUnit.NANOSECONDS));
+            LOGGER.info("THAM - Decryption Completed For Sub Packet for ID " + packetInfo.getId() + " " + (System.currentTimeMillis() - startTime) + "ms " + (new String(subPacket, StandardCharsets.UTF_8)));
             packet.setPacket(subPacket);
 
 
@@ -171,8 +176,7 @@ public class PacketKeeper {
                         getName(packet.getPacketInfo().getId(), packetInfo.getPacketName()), "Packet Integrity and Signature check failed");
                 throw new PacketIntegrityFailureException();
             }
-            LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, packetInfo.getId(),
-                    "getPacket - Checking Signature "  + " source : " + packetInfo.getSource() + " process : " + packetInfo.getProcess() + " From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.nanoTime()-startTime, TimeUnit.NANOSECONDS));
+            LOGGER.info("THAM - Check Signature Completed For encrypted Packet for ID " + packetInfo.getId() + " " + (System.currentTimeMillis() - startTime) + "ms "  + objectMapper.writeValueAsString(packet));
             return packet;
         } catch (Exception e) {
             LOGGER.error(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, packetInfo.getId(), ExceptionUtils.getStackTrace(e));
@@ -278,7 +282,7 @@ public class PacketKeeper {
 			return tags;
 	}
 
-	public Map<String, String> getTags(String id) {
+	public Map<String, String> getTags(String id, long startTime) {
 			Map<String, String> existingTags = getAdapter().getTags(PACKET_MANAGER_ACCOUNT, id);
          return existingTags;
 	}

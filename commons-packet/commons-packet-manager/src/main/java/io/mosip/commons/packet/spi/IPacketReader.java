@@ -14,19 +14,19 @@ import io.mosip.kernel.biometrics.entities.BiometricRecord;
 @Service
 public interface IPacketReader {
 
-    public boolean validatePacket(String id, String source, String process);
+    public boolean validatePacket(String id, String source, String process, long startTime);
 
-    public Map<String, Object> getAll(String id, String source, String process);
+    public Map<String, Object> getAll(String id, String source, String process, long startTime);
 
-    public String getField(String id, String field, String source, String process);
+    public String getField(String id, String field, String source, String process, long startTime);
 
-    public Map<String, String> getFields(String id, List<String> fields, String source, String process);
+    public Map<String, String> getFields(String id, List<String> fields, String source, String process, long startTime);
 
-    public Document getDocument(String id, String documentName, String source, String process);
+    public Document getDocument(String id, String documentName, String source, String process, long startTime);
 
-    public BiometricRecord getBiometric(String id, String biometricSchemaField, List<String> modalities, String source, String process);
+    public BiometricRecord getBiometric(String id, String biometricSchemaField, List<String> modalities, String source, String process, long startTime);
 
-    public Map<String, String> getMetaInfo(String id, String source, String process);
+    public Map<String, String> getMetaInfo(String id, String source, String process, long startTime);
 
-    public List<Map<String, String>> getAuditInfo(String id, String source, String process);
+    public List<Map<String, String>> getAuditInfo(String id, String source, String process, long startTime);
 }
