@@ -42,7 +42,7 @@ public class PacketWriterServiceTest {
     public void setup() {
 		 Map<String, String> tags = new HashMap<>();
 	        tags.put("test", "testValue");
-	    	 Mockito.when(packetReader.getTags(anyString())).thenReturn(tags);
+	    	 Mockito.when(packetReader.getTags(anyString(), System.currentTimeMillis())).thenReturn(tags);
 	    	
 	}
 	
