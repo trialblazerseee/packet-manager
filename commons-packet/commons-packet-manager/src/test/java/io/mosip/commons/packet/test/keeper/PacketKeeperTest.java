@@ -154,7 +154,7 @@ public class PacketKeeperTest {
 
     @Test
     public void testGetPacketSuccess() throws PacketKeeperException {
-        Packet result = packetKeeper.getPacket(packetInfo);
+        Packet result = packetKeeper.getPacket(packetInfo, System.currentTimeMillis());
 
         assertTrue(result.getPacketInfo().getId().equals(id));
         assertTrue(result.getPacketInfo().getSource().equals(source));
@@ -165,7 +165,7 @@ public class PacketKeeperTest {
     public void testGetPacketFailure() throws PacketKeeperException {
         Mockito.when(swiftAdapter.getObject(any(), any(), any(), any(), any())).thenThrow(new BaseUncheckedException("code","message"));
 
-        packetKeeper.getPacket(packetInfo);
+        packetKeeper.getPacket(packetInfo, System.currentTimeMillis());
     }
 
     @Test(expected = PacketKeeperException.class)
@@ -173,7 +173,7 @@ public class PacketKeeperTest {
     public void testPacketIntegrityFailure() throws PacketKeeperException {
         Mockito.when(onlineCrypto.verify(any(),any(), any())).thenReturn(false);
 
-        packetKeeper.getPacket(packetInfo);
+        packetKeeper.getPacket(packetInfo, System.currentTimeMillis());
     }
     @Test
     public void testAddTags() {
@@ -206,7 +206,7 @@ public class PacketKeeperTest {
         List<String> tagNames=new ArrayList<>();
         tagNames.add("osivalidation");
     	
-        Map<String,String> map = packetKeeper.getTags(id);
+        Map<String,String> map = packetKeeper.getTags(id, System.currentTimeMillis());
         assertEquals(map.get("osivalidation"), "pass");
 
     }
