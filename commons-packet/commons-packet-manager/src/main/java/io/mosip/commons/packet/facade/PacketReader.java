@@ -229,11 +229,8 @@ public class PacketReader {
     @Cacheable(value = "tags", key = "{#id}")
     public  Map<String, String>  getTags(String id, long startTime) {
         Map<String, String> tags = packetKeeper.getTags(id, startTime);
-        try {
-            LOGGER.info("THAM - Tags Prepared for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms "  + objectMapper.writeValueAsString(tags));
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
+        LOGGER.info("THAM - Tags Prepared for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms ");
+
         return tags;
     }
 
