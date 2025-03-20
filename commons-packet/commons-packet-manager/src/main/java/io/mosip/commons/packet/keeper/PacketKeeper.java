@@ -167,7 +167,7 @@ public class PacketKeeper {
             }
             byte[] subPacket = getCryptoService().decrypt(helper.getRefId(
                     packet.getPacketInfo().getId(), packet.getPacketInfo().getRefId()), encryptedSubPacket);
-            LOGGER.info("THAM - Decryption Completed For Sub Packet for ID " + packetInfo.getId() + " " + (System.currentTimeMillis() - startTime) + "ms " + (new String(subPacket, StandardCharsets.UTF_8)));
+            LOGGER.info("THAM - Decryption Completed For Sub Packet for ID " + packetInfo.getId() + " " + (System.currentTimeMillis() - startTime) + "ms ");
             packet.setPacket(subPacket);
 
 
