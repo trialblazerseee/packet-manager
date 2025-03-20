@@ -151,7 +151,7 @@ public class PacketKeeper {
                 throw new PacketKeeperException(ErrorCode.PACKET_NOT_FOUND.getErrorCode(), ErrorCode.PACKET_NOT_FOUND.getErrorMessage());
             }
             byte[] encryptedSubPacket = IOUtils.toByteArray(is);
-            LOGGER.info("THAM - Encrypted sub Packet Value from ObjectStore for ID " + packetInfo.getId() + " " + (System.currentTimeMillis() - startTime) + "ms " + (new String(encryptedSubPacket, StandardCharsets.UTF_8)));
+            LOGGER.info("THAM - Encrypted sub Packet Value from ObjectStore for ID " + packetInfo.getId() + " " + (System.currentTimeMillis() - startTime) + "ms ");
 
             Packet packet = new Packet();
             Map<String, Object> metaInfo = getAdapter().getMetaData(PACKET_MANAGER_ACCOUNT, packetInfo.getId(),
