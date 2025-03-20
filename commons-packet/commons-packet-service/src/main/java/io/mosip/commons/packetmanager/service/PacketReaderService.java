@@ -115,7 +115,7 @@ public class PacketReaderService {
                     LOGGER.info("THAM - Fetched Demographic Details completed for Process for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + objectMapper.writeValueAsString(o));
 
                     List<BiometricsDto> biometrics = null;
-                    BiometricRecord br = packetReader.getBiometric(id, getKey(), Lists.newArrayList(), o.getSource(), o.getProcess(), false, startTime);
+                    BiometricRecord br = packetReader.getBiometric(id, getKey(), Lists.newArrayList(), o.getSource(), o.getProcess(), false);
                     LOGGER.info("THAM - Fetched Biometrics Details completed for Process for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + objectMapper.writeValueAsString(o));
 
                     if (br != null && !CollectionUtils.isEmpty(br.getSegments())) {
@@ -151,7 +151,7 @@ public class PacketReaderService {
                 LOGGER.info("THAM - Prepared containerInfoDtoList object for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + objectMapper.writeValueAsString(containerInfoDtos));
             }
             // get tags
-            Map<String, String> tags = packetReader.getTags(id, startTime);
+            Map<String, String> tags = packetReader.getTags(id);
 
             InfoResponseDto infoResponseDto = new InfoResponseDto();
             infoResponseDto.setApplicationId(id);
@@ -415,7 +415,7 @@ public class PacketReaderService {
     public TagResponseDto getTags(TagRequestDto tagRequestDto, long startTime) {
     	try {
 			Map<String, String> tags = new HashMap<String, String>();
-			Map<String, String> existingTags = packetReader.getTags(tagRequestDto.getId(), startTime);
+			Map<String, String> existingTags = packetReader.getTags(tagRequestDto.getId());
 			List<String> tagNames=tagRequestDto.getTagNames();
 		    TagResponseDto tagResponseDto = new TagResponseDto();
 			if (tagNames != null && !tagNames.isEmpty()) {

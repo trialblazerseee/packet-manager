@@ -91,7 +91,7 @@ public class PacketReaderServiceTest {
 
         BiometricRecord biometricRecord = new BiometricRecord();
         biometricRecord.setSegments(birTypeList);
-        Mockito.when(packetReader.getBiometric(any(),any(),any(),any(),any(), anyBoolean(), System.currentTimeMillis())).thenReturn(biometricRecord);
+        Mockito.when(packetReader.getBiometric(any(),any(),any(),any(),any(), anyBoolean())).thenReturn(biometricRecord);
 
         Mockito.when(restTemplate.getForObject(anyString(), any(Class.class))).thenReturn("jsonobject");
         LinkedHashMap tempMap = new LinkedHashMap();
@@ -133,7 +133,7 @@ public class PacketReaderServiceTest {
     public void testGetTagsSuccess() {
         Map<String, String> tags = new HashMap<>();
         tags.put("test", "testValue");
-    	 Mockito.when(packetReader.getTags(anyString(), System.currentTimeMillis())).thenReturn(tags);
+    	 Mockito.when(packetReader.getTags(anyString())).thenReturn(tags);
     	 TagRequestDto tagRequestDto=new TagRequestDto();
     	 tagRequestDto.setId("id");
     	 List<String> tagNames=new ArrayList<String>();
@@ -146,7 +146,7 @@ public class PacketReaderServiceTest {
     public void testGetTagNotFound() {
 		 Map<String, String> tags = new HashMap<>();
 	        tags.put("test", "testValue");
-	    	 Mockito.when(packetReader.getTags(anyString(), System.currentTimeMillis())).thenReturn(tags);
+	    	 Mockito.when(packetReader.getTags(anyString())).thenReturn(tags);
 	    	 TagRequestDto tagRequestDto=new TagRequestDto();
 	    	 tagRequestDto.setId("id");
 	    	 List<String> tagNames=new ArrayList<String>();
@@ -157,7 +157,7 @@ public class PacketReaderServiceTest {
     }
 	 @Test(expected = GetTagException.class)
 	    public void testGetTagsException() {
-		 Mockito.when(packetReader.getTags(anyString(), System.currentTimeMillis())).thenThrow(new BaseUncheckedException("code","message"));
+		 Mockito.when(packetReader.getTags(anyString())).thenThrow(new BaseUncheckedException("code","message"));
 		 TagRequestDto tagRequestDto=new TagRequestDto();
     	 tagRequestDto.setId("id");
     	 List<String> tagNames=new ArrayList<String>();

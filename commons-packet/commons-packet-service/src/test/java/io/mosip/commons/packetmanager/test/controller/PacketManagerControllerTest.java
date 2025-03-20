@@ -147,7 +147,7 @@ public class PacketManagerControllerTest {
         Mockito.when(packetReaderService.getSourceAndProcess(any(),any(),any(),any())).thenReturn(new SourceProcessDto("source", "process"));
 
         Mockito.when(
-                packetReader.getDocument(anyString(), anyString(), anyString(), anyString(), System.currentTimeMillis())).thenReturn(new Document());
+                packetReader.getDocument(anyString(), anyString(), anyString(), anyString())).thenReturn(new Document());
 
         request.setRequest(documentDto);
 
@@ -167,7 +167,7 @@ public class PacketManagerControllerTest {
         Mockito.when(packetReaderService.getSourceAndProcess(any(),any(),any(),any())).thenReturn(new SourceProcessDto("source", "process"));
 
         Mockito.when(
-                packetReader.getBiometric(anyString(), anyString(), any(), anyString(), anyString(), anyBoolean(), System.currentTimeMillis())).thenReturn(new BiometricRecord());
+                packetReader.getBiometric(anyString(), anyString(), any(), anyString(), anyString(), anyBoolean())).thenReturn(new BiometricRecord());
 
         request.setRequest(biometricRequestDto);
 
@@ -187,7 +187,7 @@ public class PacketManagerControllerTest {
         Mockito.when(packetReaderService.getSourceAndProcess(any(),any(),any(), System.currentTimeMillis())).thenReturn(new SourceProcessDto("source", "process"));
 
         Mockito.when(
-                packetReader.getMetaInfo(anyString(), anyString(), anyString(), anyBoolean(), System.currentTimeMillis())).thenReturn(new HashMap<>());
+                packetReader.getMetaInfo(anyString(), anyString(), anyString(), anyBoolean())).thenReturn(new HashMap<>());
 
         request.setRequest(infoDto);
 
@@ -207,7 +207,7 @@ public class PacketManagerControllerTest {
         Mockito.when(packetReaderService.getSourceAndProcess(any(),any(),any(), System.currentTimeMillis())).thenReturn(new SourceProcessDto("source", "process"));
 
         Mockito.when(
-                packetReader.getAudits(anyString(), anyString(), anyString(), anyBoolean(), System.currentTimeMillis())).thenReturn(new ArrayList<>());
+                packetReader.getAudits(anyString(), anyString(), anyString(), anyBoolean())).thenReturn(new ArrayList<>());
 
         request.setRequest(infoDto);
 
@@ -285,7 +285,7 @@ public class PacketManagerControllerTest {
         Mockito.when(packetReaderService.getSourceAndProcess(any(),any(),any(),any())).thenReturn(new SourceProcessDto("source", "process"));
 
         Mockito.when(
-                packetReader.getAudits(anyString(), anyString(), anyString(), anyBoolean(), System.currentTimeMillis())).thenThrow(new BaseCheckedException("errorCode", "errorMessage"));
+                packetReader.getAudits(anyString(), anyString(), anyString(), anyBoolean())).thenThrow(new BaseCheckedException("errorCode", "errorMessage"));
 
         request.setRequest(infoDto);
 

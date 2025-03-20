@@ -232,7 +232,7 @@ public class PacketReaderImplTest {
 
     @Test
     public void getAllTest() {
-        Map<String, Object> result = iPacketReader.getAll("id", "source", "process", System.currentTimeMillis());
+        Map<String, Object> result = iPacketReader.getAll("id", "source", "process");
 
         assertTrue("Should be true", result.size() == 6);
     }
@@ -241,7 +241,7 @@ public class PacketReaderImplTest {
     public void getAllExceptionTest() throws IOException {
         when(objectMapper.readValue(anyString(), any(Class.class))).thenReturn(null);
 
-        Map<String, Object> result = iPacketReader.getAll("id", "source", "process", System.currentTimeMillis());
+        Map<String, Object> result = iPacketReader.getAll("id", "source", "process");
     }
 
     @Test(expected = GetAllIdentityException.class)
@@ -254,7 +254,7 @@ public class PacketReaderImplTest {
         when(objectMapper.readValue(anyString(), any(Class.class))).thenReturn(finalMap);
 
         when(JsonUtils.javaObjectToJsonString(anyObject())).thenThrow(new JsonProcessingException("errormessage"));
-        Map<String, Object> result = iPacketReader.getAll("id", "source", "process", System.currentTimeMillis());
+        Map<String, Object> result = iPacketReader.getAll("id", "source", "process");
     }
 
     @Test

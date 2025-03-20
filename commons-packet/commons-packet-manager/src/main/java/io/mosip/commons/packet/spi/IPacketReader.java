@@ -16,7 +16,7 @@ public interface IPacketReader {
 
     public boolean validatePacket(String id, String source, String process, long startTime);
 
-    public Map<String, Object> getAll(String id, String source, String process, long startTime);
+    public Map<String, Object> getAll(String id, String source, String process);
 
     public String getField(String id, String field, String source, String process, long startTime);
 

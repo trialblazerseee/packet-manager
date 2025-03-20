@@ -136,7 +136,7 @@ public class PacketReaderController {
                 documentDto.getDocumentName(), documentDto.getSource(), documentDto.getProcess(), startTime);
         Document document = sourceProcessDto == null ? null :
                 packetReader.getDocument(documentDto.getId(), documentDto.getDocumentName(),
-                sourceProcessDto.getSource(), sourceProcessDto.getProcess(), startTime);
+                sourceProcessDto.getSource(), sourceProcessDto.getProcess());
         ResponseWrapper<Document> response = new ResponseWrapper<Document>();
         response.setResponse(document);
         LOGGER.info("THAM - End of /document for ID " + documentDto.getId() + " " + (System.currentTimeMillis() - startTime) + "ms ");
@@ -162,7 +162,7 @@ public class PacketReaderController {
         List<String> modalities = bioRequest.getModalities() == null ? Lists.newArrayList() : bioRequest.getModalities();
         BiometricRecord responseDto = sourceProcessDto == null ? null :
                 packetReader.getBiometric(bioRequest.getId(), bioRequest.getPerson(), modalities,
-                sourceProcessDto.getSource(), sourceProcessDto.getProcess(), bioRequest.isBypassCache(), startTime);
+                sourceProcessDto.getSource(), sourceProcessDto.getProcess(), bioRequest.isBypassCache());
         ResponseWrapper<BiometricRecord> response = getResponseWrapper();
         response.setResponse(responseDto);
         LOGGER.info("THAM - End of /biometrics for ID " + bioRequest.getId() + " " + (System.currentTimeMillis() - startTime) + "ms ");
@@ -185,7 +185,7 @@ public class PacketReaderController {
 
         SourceProcessDto sourceProcessDto = packetReaderService.getSourceAndProcess(metaDto.getId(), metaDto.getSource(), metaDto.getProcess(), startTime);
         Map<String, String> resultFields = packetReader.getMetaInfo(metaDto.getId(),
-                sourceProcessDto.getSource(), sourceProcessDto.getProcess(), metaDto.getBypassCache(), startTime);
+                sourceProcessDto.getSource(), sourceProcessDto.getProcess(), metaDto.getBypassCache());
         FieldResponseDto resultField = new FieldResponseDto(resultFields);
         ResponseWrapper<FieldResponseDto> response = getResponseWrapper();
         response.setResponse(resultField);
@@ -209,7 +209,7 @@ public class PacketReaderController {
 
         SourceProcessDto sourceProcessDto = packetReaderService.getSourceAndProcess(metaDto.getId(), metaDto.getSource(), metaDto.getProcess(), startTime);
         List<Map<String, String>> resultFields = packetReader.getAudits(metaDto.getId(),
-                sourceProcessDto.getSource(), sourceProcessDto.getProcess(), metaDto.getBypassCache(), startTime);
+                sourceProcessDto.getSource(), sourceProcessDto.getProcess(), metaDto.getBypassCache());
         List<FieldResponseDto> resultField = new ArrayList<>();
         if (resultFields != null && !resultFields.isEmpty()) {
             resultFields.stream().forEach(e -> {

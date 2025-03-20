@@ -129,9 +129,10 @@ public class PacketReaderImpl implements IPacketReader {
 	 */
 	@Override
 	@Cacheable(value = "packets", key = "{'allFields'.concat('-').concat(#id).concat('-').concat(#process)}")
-	public Map<String, Object> getAll(String id, String source, String process, long startTime) {
+	public Map<String, Object> getAll(String id, String source, String process) {
 //		LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
 //				"Getting all fields :: entry");
+		Long startTime = System.currentTimeMillis();
 		Map<String, Object> finalMap = new LinkedHashMap<>();
 		String[] sourcePacketNames = packetNames.split(",");
 
@@ -188,7 +189,7 @@ public class PacketReaderImpl implements IPacketReader {
 	public String getField(String id, String field, String source, String process, long startTime) {
 		LOGGER.info("THAM - Entering  getField method for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms ");
 
-		Map<String, Object> allFields = getAll(id, source, process, startTime);
+		Map<String, Object> allFields = getAll(id, source, process);
 		if (allFields != null) {
 			Object fieldObj = allFields.get(field);
 			return fieldObj != null ? fieldObj.toString() : null;
@@ -201,7 +202,7 @@ public class PacketReaderImpl implements IPacketReader {
 		LOGGER.info("THAM - Entering  getFields method for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms ");
 
 		Map<String, String> result = new HashMap<>();
-		Map<String, Object> allFields = getAll(id, source, process, startTime);
+		Map<String, Object> allFields = getAll(id, source, process);
 		fields.stream().forEach(
 				field -> result.put(field, allFields.get(field) != null ? allFields.get(field).toString() : null));
 

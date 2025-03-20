@@ -38,7 +38,7 @@ public class PacketWriterService {
     public TagResponseDto addTags(TagDto tagDto) {
     	try {
 
-			Map<String, String> existingTags = packetReader.getTags(tagDto.getId(), System.currentTimeMillis());
+			Map<String, String> existingTags = packetReader.getTags(tagDto.getId());
 				for (Entry<String, String> entry : tagDto.getTags().entrySet()) {
 					if (existingTags.containsKey(entry.getKey())) {
 
@@ -69,7 +69,7 @@ public class PacketWriterService {
     public TagResponseDto updateTags(TagDto tagDto) {
     	try {
 			Map<String, String> newTags = new HashMap<String, String>();
-			Map<String, String> existingTags = packetReader.getTags(tagDto.getId(), System.currentTimeMillis());
+			Map<String, String> existingTags = packetReader.getTags(tagDto.getId());
 			if (existingTags.isEmpty()) {
 				newTags.putAll(tagDto.getTags());
 			} else {
@@ -112,7 +112,7 @@ public class PacketWriterService {
     public TagDeleteResponseDto deleteTags(TagRequestDto tagRequestDto) {
     	try {
     		List<String> deleteTags = new ArrayList<String>();
-			Map<String, String> existingTags = packetReader.getTags(tagRequestDto.getId(), System.currentTimeMillis());
+			Map<String, String> existingTags = packetReader.getTags(tagRequestDto.getId());
 
 				for (String tagName : tagRequestDto.getTagNames()) {
 					if (existingTags.containsKey(tagName)) {
