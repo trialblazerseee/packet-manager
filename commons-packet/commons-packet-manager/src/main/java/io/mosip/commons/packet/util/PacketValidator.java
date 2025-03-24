@@ -160,7 +160,7 @@ public class PacketValidator {
                 List hashseq1List = finalMap.get("hashSequence1") != null ? mapper.readValue(finalMap.get("hashSequence1"), ArrayList.class) : null;
                 LOGGER.info("THAM - hashseq1List from   fileAndChecksumValidation method  for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + mapper.writeValueAsString(hashseq1List));
 
-                List hashseq2List = finalMap.get("hashSequence2") != null ? (ArrayList) mapper.readValue(finalMap.get("hashSequence2"), ArrayList.class) : null;
+                    List hashseq2List = finalMap.get("hashSequence2") != null ? (ArrayList) mapper.readValue(finalMap.get("hashSequence2"), ArrayList.class) : null;
                 LOGGER.info("THAM - hashseq2List from   fileAndChecksumValidation method  for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " + mapper.writeValueAsString(hashseq2List));
 
                 Map<String, InputStream> checksumMap = new HashMap<>();

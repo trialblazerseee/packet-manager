@@ -109,7 +109,7 @@ public class PacketReader {
                 "getDocument for documentName : " + documentName + " source : " + source + " process : " + process);
         Document document=  getProvider(source, process).getDocument(id, documentName, source, process, startTime);
         LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-                "getDocument - Object Reading for field : " + documentName + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.nanoTime()-startTime, TimeUnit.NANOSECONDS));
+                "getDocument - Object Reading for field : " + documentName + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.currentTimeMillis()-startTime, TimeUnit.NANOSECONDS));
         return document;
     }
 
@@ -132,7 +132,7 @@ public class PacketReader {
         BiometricRecord biometricRecord =  getProvider(source, process).getBiometric(id, person, modalities, source, process, startTime);
         try {
             LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-                    "getBiometric - Object Reading for field : " + person + "[" + objectMapper.writeValueAsString(modalities) + "]"  + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.nanoTime()-startTime, TimeUnit.NANOSECONDS));
+                    "getBiometric - Object Reading for field : " + person + "[" + objectMapper.writeValueAsString(modalities) + "]"  + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.currentTimeMillis()-startTime, TimeUnit.NANOSECONDS));
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
@@ -156,7 +156,7 @@ public class PacketReader {
                 "getMetaInfo for source : " + source + " process : " + process);
         Map<String, String> metaMap=  getProvider(source, process).getMetaInfo(id, source, process, startTime);
         LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-                "getMetaInfo - Object Reading"  + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.nanoTime()-startTime, TimeUnit.NANOSECONDS));
+                "getMetaInfo - Object Reading"  + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.currentTimeMillis()-startTime, TimeUnit.NANOSECONDS));
         return metaMap;
 
     }
@@ -171,10 +171,10 @@ public class PacketReader {
      */
     @PreAuthorize("hasRole('DATA_READ')")
     public List<ObjectDto> info(String id, Long startTime) {
-        LOGGER.info("THAM - Entering info method for ID " + id + " " + (System.nanoTime() - startTime) + "ms");
+        LOGGER.info("THAM - Entering info method for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms");
         List<ObjectDto> objectList =  packetKeeper.getAll(id);
         try {
-            LOGGER.info("THAM - Existing info method for ID " + id + " " + (System.nanoTime() - startTime) + "ms " +  objectMapper.writeValueAsString(objectList));
+            LOGGER.info("THAM - Existing info method for ID " + id + " " + (System.currentTimeMillis() - startTime) + "ms " +  objectMapper.writeValueAsString(objectList));
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
@@ -227,7 +227,7 @@ public class PacketReader {
                 "getAudits for source : " + source + " process : " + process);
         List<Map<String, String>> map =  getProvider(source, process).getAuditInfo(id, source, process, startTime);
         LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-                "getAudits - Object Reading"  + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.nanoTime()-startTime, TimeUnit.NANOSECONDS));
+                "getAudits - Object Reading"  + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.currentTimeMillis()-startTime, TimeUnit.NANOSECONDS));
         return map;
     }
 
@@ -244,7 +244,7 @@ public class PacketReader {
     public boolean validatePacket(String id, String source, String process, long startTime) {
         boolean valid =  getProvider(source, process).validatePacket(id, source, process, startTime);
         LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-                "validatePacket - Object Reading"  + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.nanoTime()-startTime, TimeUnit.NANOSECONDS));
+                "validatePacket - Object Reading"  + " source : " + source + " process : " + process + " From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.currentTimeMillis()-startTime, TimeUnit.NANOSECONDS));
         return valid;
     }
 
