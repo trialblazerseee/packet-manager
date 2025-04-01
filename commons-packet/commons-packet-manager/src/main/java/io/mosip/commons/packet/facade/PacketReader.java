@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
-import io.mosip.commons.khazana.dto.ObjectDto;
+import io.mosip.commons.packet.dto.ObjectDto;
 import io.mosip.commons.packet.dto.Document;
 import io.mosip.commons.packet.exception.NoAvailableProviderException;
 import io.mosip.commons.packet.keeper.PacketKeeper;
