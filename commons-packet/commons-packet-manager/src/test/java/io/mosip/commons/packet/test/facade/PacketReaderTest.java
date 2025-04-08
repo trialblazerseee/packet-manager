@@ -26,7 +26,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import io.mosip.commons.khazana.dto.ObjectDto;
+import io.mosip.commons.packet.dto.ObjectDto;
 import io.mosip.commons.packet.dto.Document;
 import io.mosip.commons.packet.exception.NoAvailableProviderException;
 import io.mosip.commons.packet.facade.PacketReader;

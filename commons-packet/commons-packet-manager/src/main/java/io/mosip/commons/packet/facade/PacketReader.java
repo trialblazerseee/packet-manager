@@ -8,7 +8,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.mosip.kernel.core.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.Cacheable;
@@ -17,7 +19,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
-import io.mosip.commons.khazana.dto.ObjectDto;
+import io.mosip.commons.packet.dto.ObjectDto;
 import io.mosip.commons.packet.dto.Document;
 import io.mosip.commons.packet.exception.NoAvailableProviderException;
 import io.mosip.commons.packet.keeper.PacketKeeper;
@@ -165,16 +167,23 @@ public class PacketReader {
      * Get all field names from identity object
      *
      * @param id
-     * @param source
-     * @param process
      * @return
      */
     @PreAuthorize("hasRole('DATA_READ')")
+    @Cacheable(value = "info", key = "{#id}")
     public List<ObjectDto> info(String id) {
         LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
                 "info called");
         Long startTime = System.nanoTime();
-        List<ObjectDto> objectList =  packetKeeper.getAll(id);
+        List<ObjectDto> objectList = null;
+        try {
+            objectList = objectMapper.readValue(objectMapper.writeValueAsString(packetKeeper.getAll(id)), new TypeReference<List<ObjectDto>>() {});
+            LOGGER.info("Response after Cnvertion " + objectMapper.writeValueAsString(objectList));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            LOGGER.error("Error While converting ObjectDto " + ExceptionUtils.getStackTrace(e));
+        }
+           ;
         LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
                 "info - Object Reading From Object Store. Response Time in Seconds : " + TimeUnit.MILLISECONDS.convert(System.nanoTime()-startTime, TimeUnit.NANOSECONDS));
         return objectList;
