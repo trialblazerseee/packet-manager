@@ -105,10 +105,10 @@ public class ObjectDto implements Serializable {
     }
 
     public int hashCode() {
-        int PRIME = true;
+        boolean PRIME = true;
         int result = 1;
         Object $source = this.getSource();
-        int result = result * 59 + ($source == null ? 43 : $source.hashCode());
+        result = result * 59 + ($source == null ? 43 : $source.hashCode());
         Object $process = this.getProcess();
         result = result * 59 + ($process == null ? 43 : $process.hashCode());
         Object $objectName = this.getObjectName();

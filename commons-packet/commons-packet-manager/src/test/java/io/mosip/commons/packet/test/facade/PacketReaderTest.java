@@ -230,7 +230,7 @@ public class PacketReaderTest {
         List<ObjectDto> objectDtos = Lists.newArrayList(objectDto, objectDto2, objectDto3);
 
 
-        Mockito.when(packetKeeper.getAll(any())).thenReturn(objectDtos);
+      //  Mockito.when(packetKeeper.getAll(any())).thenReturn(objectDtos);
 
         List<ObjectDto> result = packetReader.info("id");
 
