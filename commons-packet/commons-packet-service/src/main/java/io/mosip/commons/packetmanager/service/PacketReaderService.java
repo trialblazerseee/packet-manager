@@ -126,11 +126,13 @@ public class PacketReaderService {
 
             if (executor instanceof ThreadPoolExecutor) {
                 ThreadPoolExecutor tpe = (ThreadPoolExecutor) executor;
-
-                LOGGER.info("THAM - Live Pool={}, Active={}, Queue={}",
+                ThreadMXBean bean = ManagementFactory.getThreadMXBean();
+                LOGGER.info("THAM - Live Pool={}, Active={}, Queue={}, Live Threads: {}, Peak Threads: {}",
                         tpe.getPoolSize(),
                         tpe.getActiveCount(),
-                        tpe.getQueue().size());
+                        tpe.getQueue().size(),
+                        bean.getThreadCount(),
+                        bean.getPeakThreadCount());
             }
         }
     }
