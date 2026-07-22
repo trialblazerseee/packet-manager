@@ -144,12 +144,15 @@ public class PacketKeeper {
         try {
             final byte[] encryptedSubPacket;
             long totalByteLatencyStartMillis = System.currentTimeMillis();
+            LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID,
+                    packetName, "THAM - Started Reading Stream : " + packetName);
             try (InputStream is = getAdapter().getObject(PACKET_MANAGER_ACCOUNT, packetInfo.getId(),
                     packetInfo.getSource(), packetInfo.getProcess(), packetName)) {
-
+                LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID,
+                        packetName, "THAM - Reading Stream Completed: " + packetName);
                 if (is == null) {
                     LOGGER.error(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID,
-                            packetName, packetInfo.getProcess() + " Packet is not present in packet store.");
+                            packetName, packetInfo.getProcess() + "THAM - Packet is not present in packet store.");
                     throw new PacketKeeperException(ErrorCode.PACKET_NOT_FOUND.getErrorCode(),
                             ErrorCode.PACKET_NOT_FOUND.getErrorMessage());
                 }
@@ -157,14 +160,18 @@ public class PacketKeeper {
                 // Convert stream to byte array (necessary for encryption/decryption and signature verification)
                 encryptedSubPacket = IOUtils.toByteArray(is);
                 LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID,
-                        packetName, "Total byte latency (ms): " + (System.currentTimeMillis() - totalByteLatencyStartMillis));
+                        packetName, "THAM - Total byte latency (ms): " + (System.currentTimeMillis() - totalByteLatencyStartMillis));
             }
 
             Packet packet = new Packet();
 
+            LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID,
+                    packetName, "THAM - Getting Meta Info from Object Store : " + packetName);
             // Get metadata
             Map<String, Object> metaInfo = getAdapter().getMetaData(PACKET_MANAGER_ACCOUNT, packetInfo.getId(),
                     packetInfo.getSource(), packetInfo.getProcess(), packetName);
+            LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID,
+                    packetName, "THAM - Meta Info from Object Store Completed: " + packetName);
             if (metaInfo != null && !metaInfo.isEmpty()) {
                 packet.setPacketInfo(PacketManagerHelper.getPacketInfo(metaInfo));
             } else {
@@ -172,17 +179,22 @@ public class PacketKeeper {
                         packetName, "metainfo not found for this packet");
                 packet.setPacketInfo(packetInfo);
             }
+
+            LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID,
+                    packetName, "THAM - Start Decryptinh Packet : " + packetName);
             byte[] subPacket = getCryptoService().decrypt(helper.getRefId(
                     packet.getPacketInfo().getId(), packet.getPacketInfo().getRefId()), encryptedSubPacket);
             packet.setPacket(subPacket);
-
+            LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID,
+                    packetName, "THAM - Decrypting Packet Completed: " + packetName);
 
 			if (!checkSignature(packet, encryptedSubPacket)) {
                 LOGGER.error(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID,
                         packetName, "Packet Integrity and Signature check failed");
                 throw new PacketIntegrityFailureException();
             }
-
+            LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID,
+                    packetName, "THAM - Signature Check Completed Completed: " + packetName);
             return packet;
         } catch (Exception e) {
             LOGGER.error(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, packetInfo.getId(), ExceptionUtils.getStackTrace(e));

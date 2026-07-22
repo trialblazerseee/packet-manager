@@ -166,7 +166,12 @@ public class PacketReaderImpl implements IPacketReader {
 			for (String srcPacket : names) {
 				futures.add(CompletableFuture.supplyAsync(() -> {
 					try {
-						return packetKeeper.getPacket(getPacketInfo(id, srcPacket, source, process));
+						LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
+								"THAM - Entering to Read Packet for id: " + id + " and Name: " + srcPacket);
+						Packet packet =  packetKeeper.getPacket(getPacketInfo(id, srcPacket, source, process));
+						LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
+								"THAM - Exist to Read Packet for id: " + id + " and Name: " + srcPacket);
+						return packet;
 					} catch (Exception e) {
 						throw new CompletionException(e);
 					}
