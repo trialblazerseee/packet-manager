@@ -185,7 +185,7 @@ public class PacketReaderImpl implements IPacketReader {
 
 				Packet packet = future.join();
 				LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
-						"THAM - Joining Future for Process id: " + id + " and Name: " + packet.getPacketInfo().getPacketName());
+						"THAM - Joining Future for Process id: " + id + " and Name: " + (packet.getPacketInfo() != null ? packet.getPacketInfo().getPacketName() : null ));
 				try (InputStream idJsonStream = ZipUtils.unzipAndGetFile(packet.getPacket(), "ID")) {
 
 					if (idJsonStream == null) {
