@@ -1,6 +1,8 @@
 package io.mosip.commons.packetmanager.service;
 
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -19,6 +21,7 @@ import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestTemplate;
@@ -92,6 +95,14 @@ public class PacketReaderService {
 
     public InfoResponseDto info(String id) {
         return mergeProcessWithMultipleIteration(infoInternal(id));
+    }
+
+    @Scheduled(fixedRate = 10000)
+    public void logThreadCount() {
+        ThreadMXBean bean = ManagementFactory.getThreadMXBean();
+        LOGGER.info("Live Threads: {}, Peak Threads: {}",
+                bean.getThreadCount(),
+                bean.getPeakThreadCount());
     }
 
     private InfoResponseDto infoInternal(String id) {
