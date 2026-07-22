@@ -13,10 +13,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import io.mosip.commons.packet.util.PacketHelper;
+import org.apache.coyote.AbstractProtocol;
+import org.apache.coyote.ProtocolHandler;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -49,6 +52,8 @@ import io.mosip.kernel.core.exception.BaseUncheckedException;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.StringUtils;
+import org.apache.catalina.connector.Connector;
+
 
 @Component
 public class PacketReaderService {
@@ -81,6 +86,9 @@ public class PacketReaderService {
     private String defaultPriority;
 
     @Autowired
+    private Connector connector;
+
+    @Autowired
     private PacketReader packetReader;
 
     @Autowired
@@ -99,10 +107,25 @@ public class PacketReaderService {
 
     @Scheduled(fixedRate = 10000)
     public void logThreadCount() {
-        ThreadMXBean bean = ManagementFactory.getThreadMXBean();
-        LOGGER.info("Live Threads: {}, Peak Threads: {}",
-                bean.getThreadCount(),
-                bean.getPeakThreadCount());
+        ProtocolHandler handler = connector.getProtocolHandler();
+
+        if (handler instanceof AbstractProtocol) {
+            AbstractProtocol<?> protocol = (AbstractProtocol<?>) handler;
+
+            var executor = protocol.getExecutor();
+
+            if (executor instanceof java.util.concurrent.ThreadPoolExecutor) {
+                ThreadPoolExecutor tpe = (ThreadPoolExecutor) executor;
+
+                LOGGER.info(
+                        "PoolSize={}, ActiveThreads={}, QueueSize={}, CompletedTasks={}",
+                        tpe.getPoolSize(),
+                        tpe.getActiveCount(),
+                        tpe.getQueue().size(),
+                        tpe.getCompletedTaskCount()
+                );
+            }
+        }
     }
 
     private InfoResponseDto infoInternal(String id) {
