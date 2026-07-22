@@ -121,11 +121,13 @@ public class PacketReaderService {
             AbstractProtocol<?> protocol = (AbstractProtocol<?>) handler;
 
             Executor executor = protocol.getExecutor();
+            LOGGER.info("Executor class = {}",
+                    executor == null ? "null" : executor.getClass().getName());
 
             if (executor instanceof ThreadPoolExecutor) {
                 ThreadPoolExecutor tpe = (ThreadPoolExecutor) executor;
 
-                LOGGER.info("Pool={}, Active={}, Queue={}",
+                LOGGER.info("THAM - Live Pool={}, Active={}, Queue={}",
                         tpe.getPoolSize(),
                         tpe.getActiveCount(),
                         tpe.getQueue().size());
