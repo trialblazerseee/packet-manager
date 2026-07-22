@@ -6,6 +6,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -175,7 +177,14 @@ public class PacketReader {
     public List<ObjectDto> info(String id) {
         LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
                 "info called");
-        return packetKeeper.getAll(id);
+         List<ObjectDto> list = packetKeeper.getAll(id);
+        try {
+            LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
+                    "THAM - info Object" + (new ObjectMapper()).writeValueAsString(list));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        return list;
     }
 
     /**
