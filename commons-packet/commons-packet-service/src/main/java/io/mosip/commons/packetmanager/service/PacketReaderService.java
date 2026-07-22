@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
@@ -24,6 +25,8 @@ import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.embedded.tomcat.TomcatWebServer;
+import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -86,7 +89,7 @@ public class PacketReaderService {
     private String defaultPriority;
 
     @Autowired
-    private Connector connector;
+    private ServletWebServerApplicationContext webServerAppCtxt;
 
     @Autowired
     private PacketReader packetReader;
@@ -107,23 +110,25 @@ public class PacketReaderService {
 
     @Scheduled(fixedRate = 10000)
     public void logThreadCount() {
+        TomcatWebServer webServer =
+            (TomcatWebServer) webServerAppCtxt.getWebServer();
+
+        Connector connector = webServer.getTomcat().getConnector();
+
         ProtocolHandler handler = connector.getProtocolHandler();
 
-        if (handler instanceof AbstractProtocol) {
+        if (handler instanceof AbstractProtocol<?>) {
             AbstractProtocol<?> protocol = (AbstractProtocol<?>) handler;
 
-            var executor = protocol.getExecutor();
+            Executor executor = protocol.getExecutor();
 
-            if (executor instanceof java.util.concurrent.ThreadPoolExecutor) {
+            if (executor instanceof ThreadPoolExecutor) {
                 ThreadPoolExecutor tpe = (ThreadPoolExecutor) executor;
 
-                LOGGER.info(
-                        "PoolSize={}, ActiveThreads={}, QueueSize={}, CompletedTasks={}",
+                LOGGER.info("Pool={}, Active={}, Queue={}",
                         tpe.getPoolSize(),
                         tpe.getActiveCount(),
-                        tpe.getQueue().size(),
-                        tpe.getCompletedTaskCount()
-                );
+                        tpe.getQueue().size());
             }
         }
     }
