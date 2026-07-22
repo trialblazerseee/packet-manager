@@ -184,7 +184,8 @@ public class PacketReaderImpl implements IPacketReader {
 			for (CompletableFuture<Packet> future : futures) {
 
 				Packet packet = future.join();
-
+				LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
+						"THAM - Joining Future for Process id: " + id + " and Name: " + packet.getPacketInfo().getPacketName());
 				try (InputStream idJsonStream = ZipUtils.unzipAndGetFile(packet.getPacket(), "ID")) {
 
 					if (idJsonStream == null) {
@@ -240,7 +241,8 @@ public class PacketReaderImpl implements IPacketReader {
 					}
 				}
 			}
-
+			LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
+					"THAM - Exist Process : " + id );
 		} catch (CompletionException ce) {
 
 			Throwable cause = ce.getCause() != null ? ce.getCause() : ce;
