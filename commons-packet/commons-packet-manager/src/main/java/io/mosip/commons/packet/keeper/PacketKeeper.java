@@ -1,6 +1,7 @@
 package io.mosip.commons.packet.keeper;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
@@ -150,6 +151,7 @@ public class PacketKeeper {
                     packetInfo.getSource(), packetInfo.getProcess(), packetName)) {
                 LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID,
                         packetName, "THAM - Reading Stream Completed: " + packetName);
+                LOGGER.info("Stream class = {}", is.getClass().getName());
                 if (is == null) {
                     LOGGER.error(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID,
                             packetName, packetInfo.getProcess() + "THAM - Packet is not present in packet store.");
@@ -157,8 +159,42 @@ public class PacketKeeper {
                             ErrorCode.PACKET_NOT_FOUND.getErrorMessage());
                 }
 
-                // Convert stream to byte array (necessary for encryption/decryption and signature verification)
-                encryptedSubPacket = IOUtils.toByteArray(is);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+                byte[] buffer = new byte[8192];
+                long totalBytes = 0;
+                long readStart = System.currentTimeMillis();
+
+                int bytesRead;
+
+                while ((bytesRead = is.read(buffer)) != -1) {
+
+                    long beforeCopy = System.currentTimeMillis();
+
+                    baos.write(buffer, 0, bytesRead);
+
+                    long afterCopy = System.currentTimeMillis();
+
+                    totalBytes += bytesRead;
+
+                    LOGGER.debug(PacketManagerLogger.SESSIONID,
+                            PacketManagerLogger.REGISTRATIONID,
+                            packetName,
+                            String.format(
+                                    "THAM - Read %,d bytes (Total: %,d KB), read+copy took %d ms",
+                                    bytesRead,
+                                    totalBytes / 1024,
+                                    (afterCopy - beforeCopy)));
+                }
+
+                encryptedSubPacket = baos.toByteArray();
+
+                LOGGER.debug(PacketManagerLogger.SESSIONID,
+                        PacketManagerLogger.REGISTRATIONID,
+                        packetName,
+                        "THAM - Total bytes: " + totalBytes +
+                                ", Total stream read time: " +
+                                (System.currentTimeMillis() - readStart) + " ms");
                 LOGGER.debug(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID,
                         packetName, "THAM - Total byte latency (ms): " + (System.currentTimeMillis() - totalByteLatencyStartMillis));
             }
