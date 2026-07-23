@@ -3,6 +3,8 @@ package io.mosip.commons.packet.keeper;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Map;
@@ -160,31 +162,45 @@ public class PacketKeeper {
                 }
 
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
                 byte[] buffer = new byte[8192];
                 long totalBytes = 0;
                 long readStart = System.currentTimeMillis();
 
-                int bytesRead;
+                ThreadMXBean bean = ManagementFactory.getThreadMXBean();
+                if (bean.isThreadCpuTimeSupported() && !bean.isThreadCpuTimeEnabled()) {
+                    bean.setThreadCpuTimeEnabled(true);
+                }
 
-                while ((bytesRead = is.read(buffer)) != -1) {
+                while (true) {
 
-                    long beforeCopy = System.currentTimeMillis();
+                    long readWallStart = System.nanoTime();
+                    long readCpuStart = bean.getCurrentThreadCpuTime();
+
+                    int bytesRead = is.read(buffer);
+
+                    long readWallEnd = System.nanoTime();
+                    long readCpuEnd = bean.getCurrentThreadCpuTime();
+
+                    if (bytesRead == -1) {
+                        break;
+                    }
+
+                    long writeWallStart = System.nanoTime();
+                    long writeCpuStart = bean.getCurrentThreadCpuTime();
 
                     baos.write(buffer, 0, bytesRead);
 
-                    long afterCopy = System.currentTimeMillis();
+                    long writeWallEnd = System.nanoTime();
+                    long writeCpuEnd = bean.getCurrentThreadCpuTime();
 
-                    totalBytes += bytesRead;
-
-                    LOGGER.debug(PacketManagerLogger.SESSIONID,
-                            PacketManagerLogger.REGISTRATIONID,
-                            packetName,
-                            String.format(
-                                    "THAM - Read %,d bytes (Total: %,d KB), read+copy took %d ms",
-                                    bytesRead,
-                                    totalBytes / 1024,
-                                    (afterCopy - beforeCopy)));
+                    LOGGER.info(
+                            "THAM - READ wall={} ms cpu={} ms | WRITE wall={} ms cpu={} ms | bytes={}",
+                            (readWallEnd - readWallStart) / 1_000_000,
+                            (readCpuEnd - readCpuStart) / 1_000_000,
+                            (writeWallEnd - writeWallStart) / 1_000_000,
+                            (writeCpuEnd - writeCpuStart) / 1_000_000,
+                            bytesRead
+                    );
                 }
 
                 encryptedSubPacket = baos.toByteArray();
