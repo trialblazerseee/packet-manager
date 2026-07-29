@@ -122,7 +122,7 @@ public class PacketReader {
      * @return Document : document information
      */
     @PreAuthorize("hasRole('DOCUMENT_READ')")
-    @Cacheable(value = "packets",key = "'documents'.concat('-').concat(#p0).concat('-').concat(#p1).concat('-').concat(#p2).concat('-').concat(#p3)"
+    @Cacheable(value = "packets",key = "{'documents'.concat('-').concat(#p0).concat('-').concat(#p1).concat('-').concat(#p2).concat('-').concat(#p3)}"
     ,unless = "#result == null")
     public Document getDocument(String id, String documentName, String source, String process) {
         LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
@@ -173,7 +173,7 @@ public class PacketReader {
      * @return
      */
     @PreAuthorize("hasRole('DATA_READ')")
-    @Cacheable(value = "info", key = "#p0", condition = "@packetReader.isInfoCacheEnabled()" ,unless = "#result == null")
+    @Cacheable(value = "info", key = "{#p0}", condition = "@packetReader.isInfoCacheEnabled()" ,unless = "#result == null")
     public List<ObjectDto> info(String id) {
         LOGGER.info(PacketManagerLogger.SESSIONID, PacketManagerLogger.REGISTRATIONID, id,
                 "info called");
